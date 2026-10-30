@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Clinic setup · MOA Shift Scheduler</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <header>
+    <h1>MOA Shift Scheduler</h1>
+    <nav><a href="/">Week</a><a href="/admin.html" aria-current="page">Clinic setup</a></nav>
+  </header>
+  <main>
+    <section id="clinic">
+      <h2>Clinic settings</h2>
+      <form id="clinic-form" novalidate>
+        <label for="clinic-name">Clinic name</label>
+        <input id="clinic-name" name="name" required>
+        <label>Open hours <span class="muted">(leave a day blank if closed)</span></label>
+        <div class="hours" id="clinic-hours"></div>
+        <label for="clinic-ratio">MOAs needed per provider</label>
+        <input id="clinic-ratio" name="coverage_ratio" type="number" step="0.05" min="0.1" max="5">
+        <p class="muted">0.5 means one MOA for every two providers, rounded up.</p>
+        <label for="clinic-week">Overtime week starts on</label>
+        <select id="clinic-week" name="week_starts_on"></select>
+        <p class="form-error" hidden></p>
+        <p><button class="primary">Save settings</button><span class="saved" hidden>Saved</span></p>
+      </form>
+    </section>
+
+    <section id="staff">
+      <h2>Staff <button data-add="staff">Add person</button></h2>
+      <table>
+        <thead><tr><th>Name</th><th class="hide-sm">Type</th><th>Skills</th><th></th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </section>
+
+    <section id="stations">
+      <h2>Stations <button data-add="stations">Add station</button></h2>
+      <table>
+        <thead><tr><th>Station</th><th>Required skill</th><th></th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </section>
+
+    <section id="skills">
+      <h2>Skills <button data-add="skills">Add skill</button></h2>
+      <table>
+        <thead><tr><th>Skill</th><th class="hide-sm">Staff with it</th><th></th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </section>
+  </main>
+
+  <dialog id="editor">
+    <form method="dialog" novalidate>
+      <h2 id="editor-title"></h2>
+      <div id="editor-fields"></div>
+      <p class="form-error" hidden></p>
+      <menu>
+        <button value="cancel" formnovalidate>Cancel</button>
+        <button class="primary" value="save">Save</button>
+      </menu>
+    </form>
+  </dialog>
+
+  <script type="module" src="/admin.js"></script>
+</body>
+</html>
