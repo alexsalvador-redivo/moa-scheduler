@@ -4,6 +4,7 @@ import { checkSchedule } from './rules.js';
 import { handleAdmin } from './admin.js';
 import { handleSchedule, loadWeek } from './schedule.js';
 import { handleMe } from './me.js';
+import { handlePublish } from './publish.js';
 
 const json = (data, status = 200) =>
   new Response(JSON.stringify(data), { status, headers: { 'content-type': 'application/json' } });
@@ -28,6 +29,9 @@ export default {
 
     const mine = await handleMe(request, env, url.pathname);
     if (mine) return mine;
+
+    const manage = await handlePublish(request, env, url);
+    if (manage) return manage;
 
     const schedule = await handleSchedule(request, env.DB, url);
     if (schedule) return schedule;

@@ -131,3 +131,13 @@ ul.plain { list-style: none; padding: 0; margin: 0; }
 .status-pending { background: #fff4d6; }
 .status-approved { background: #dff3e3; }
 .status-declined { background: #fde8e8; }
+
+/* ---------- publish, export, requests ---------- */
+a.button { font: inherit; border: 1px solid var(--line); background: var(--card); border-radius: 6px; padding: .3rem .7rem;
+  color: var(--text); text-decoration: none; }
+button:disabled { opacity: .5; cursor: default; }
+.notice { border-radius: 6px; padding: .5rem .75rem; margin: 0 0 .75rem; }
+.notice.ok { background: #dff3e3; }
+.notice.warn { background: #fff4d6; }
+.request { display: flex; justify-content: space-between; gap: .75rem; padding: .5rem 0; border-bottom: 1px solid var(--line); flex-wrap: wrap; }
+.request .actions { display: flex; gap: .4rem; align-items: start; }

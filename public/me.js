@@ -50,8 +50,10 @@ function showErrors(form, err) {
 
 function renderShifts() {
   const list = $('#shift-list');
+  const notice = me.beingUpdated
+    ? '<p class="hint">Your manager is updating the schedule. Check back soon for changes.</p>' : '';
   if (!me.shifts.length) {
-    list.innerHTML = `<div class="empty"><p><b>No shifts published yet.</b></p>
+    list.innerHTML = `${notice}<div class="empty"><p><b>No shifts published yet.</b></p>
       <p class="muted">You'll get an email when your manager publishes the schedule.</p></div>`;
     return;
   }
@@ -62,7 +64,7 @@ function renderShifts() {
     if (!weeks.has(start)) weeks.set(start, []);
     weeks.get(start).push(s);
   }
-  list.innerHTML = [...weeks].map(([start, shifts]) => {
+  list.innerHTML = notice + [...weeks].map(([start, shifts]) => {
     const total = shifts.reduce((t, s) => t + s.minutes, 0);
     return `<h2 class="week-head">Week of ${fmtDate(start, { month: 'short', day: 'numeric' })}<span class="muted">${hours(total)}</span></h2>
       <ul class="plain shifts">${shifts.map((s) => {

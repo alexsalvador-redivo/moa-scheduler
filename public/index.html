@@ -19,7 +19,10 @@
       <span class="spacer"></span>
       <span id="week-status" class="tag"></span>
       <button id="copy">Copy last week</button>
+      <a id="export" class="button" download>Export hours (CSV)</a>
+      <button id="publish" class="primary">Publish</button>
     </div>
+    <p id="publish-result" class="notice" hidden></p>
 
     <div class="grid-wrap">
       <table class="grid" id="grid">
@@ -33,6 +36,11 @@
       <span><i class="swatch idle"></i>No providers booked</span>
       <span class="muted">Click a day's provider count to change it. Click a cell to add a shift.</span>
     </p>
+
+    <section id="requests">
+      <h2>Time-off requests <span class="count"></span></h2>
+      <ul class="plain"></ul>
+    </section>
 
     <section id="warnings">
       <h2>Warnings <span class="count"></span></h2>

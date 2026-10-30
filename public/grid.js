@@ -91,8 +91,13 @@ function render() {
   const { dates } = week;
   $('#week-label').textContent = `${fmtDay(dates[0], { month: 'short', day: 'numeric' })} – ${fmtDay(dates[6], { month: 'short', day: 'numeric', year: 'numeric' })}`;
   const status = $('#week-status');
-  status.textContent = week.publishedAt ? 'Published' : 'Draft';
-  status.className = `tag ${week.publishedAt ? 'published' : 'draft'}`;
+  const changed = week.publishedAt && week.unpublishedChanges;
+  status.textContent = !week.publishedAt ? 'Draft' : changed ? 'Published, with unpublished changes' : 'Published';
+  status.className = `tag ${week.publishedAt && !changed ? 'published' : 'draft'}`;
+  const publish = $('#publish');
+  publish.textContent = changed ? 'Publish changes' : 'Publish';
+  publish.disabled = !week.shifts.length || (week.publishedAt && !changed);
+  $('#export').href = `/api/week/export.csv?date=${week.weekStart}`;
   history.replaceState(null, '', `?week=${week.weekStart}`);
 
   const warned = new Map();
@@ -133,8 +138,66 @@ function render() {
 async function load(date) {
   week = await api(`week?date=${date}`);
   highlighted = new Set();
+  $('#publish-result').hidden = true;
   render();
 }
+
+// ---------- time-off requests ----------
+
+function renderRequests(requests) {
+  $('#requests .count').textContent = requests.length ? `(${requests.length})` : '';
+  $('#requests ul').innerHTML = requests.length ? requests.map((r) => {
+    const days = r.start_date === r.end_date
+      ? fmtDay(r.start_date, { weekday: 'short', month: 'short', day: 'numeric' })
+      : `${fmtDay(r.start_date, { month: 'short', day: 'numeric' })} – ${fmtDay(r.end_date, { month: 'short', day: 'numeric' })}`;
+    const clash = r.shift_count ? ` <span class="tag code">${r.shift_count} shift${r.shift_count > 1 ? 's' : ''} booked then</span>` : '';
+    return `<li class="request"><div><b>${esc(r.name)}</b> · ${days}${clash}
+        ${r.reason ? `<br><span class="muted">${esc(r.reason)}</span>` : ''}</div>
+      <div class="actions"><button data-decide="approved" data-id="${r.id}">Approve</button>
+        <button class="danger" data-decide="declined" data-id="${r.id}">Decline</button></div></li>`;
+  }).join('') : '<li class="muted">No requests waiting.</li>';
+}
+
+async function loadRequests() {
+  renderRequests(await api('time-off?status=pending'));
+}
+
+$('#requests').addEventListener('click', async (e) => {
+  const btn = e.target.closest('[data-decide]');
+  if (!btn) return;
+  btn.disabled = true;
+  try {
+    renderRequests(await api(`time-off/${btn.dataset.id}`, { method: 'PUT', body: { status: btn.dataset.decide } }));
+    await load(week.weekStart); // approved time off changes the availability warnings
+  } catch (err) {
+    alert(err.message);
+    btn.disabled = false;
+  }
+});
+
+// ---------- publish ----------
+
+$('#publish').addEventListener('click', async () => {
+  const n = week.warnings.length;
+  const question = n
+    ? `This week still has ${n} warning${n > 1 ? 's' : ''}. Publish anyway? Staff will see their shifts and get an email.`
+    : 'Publish this week? Staff will see their shifts and get an email.';
+  if (!confirm(question)) return;
+  try {
+    const result = await api('week/publish', { method: 'POST', body: { week: week.weekStart } });
+    week = result.week;
+    render();
+    const { sent, failed, skipped, configured } = result.emails;
+    const box = $('#publish-result');
+    box.textContent = !configured
+      ? `Published. Email isn't set up yet, so ${skipped === 1 ? '1 notice wasn\'t' : `${skipped} notices weren't`} sent.`
+      : `Published. ${sent} email${sent === 1 ? '' : 's'} sent${failed ? `, ${failed} failed` : ''}.`;
+    box.className = `notice ${failed || !configured ? 'warn' : 'ok'}`;
+    box.hidden = false;
+  } catch (err) {
+    alert(err.message);
+  }
+});
 
 // ---------- shift dialog ----------
 
@@ -297,3 +360,4 @@ $('#copy').addEventListener('click', async () => {
 
 const params = new URLSearchParams(location.search);
 load(params.get('week') ?? new Date().toISOString().slice(0, 10));
+loadRequests();
