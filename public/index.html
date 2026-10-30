@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>MOA Shift Scheduler</title>
+  <style>
+    body { font: 16px/1.5 system-ui, sans-serif; max-width: 48rem; margin: 2rem auto; padding: 0 1rem; color: #1f2933; }
+    li { margin: .25rem 0; }
+    code { background: #f1f3f5; padding: 0 .25rem; border-radius: 3px; }
+  </style>
+</head>
+<body>
+  <h1>MOA Shift Scheduler</h1>
+  <p>Milestones 1–2 are in place: database, seed clinic and the BC rules engine. The manager grid comes in milestone 4.</p>
+  <p id="status">Checking the API…</p>
+  <ul id="warnings"></ul>
+  <script>
+    const week = '2026-11-01';
+    const esc = (t) => t.replace(/[&<>"]/g, (c) => `&#${c.charCodeAt(0)};`);
+    fetch(`/api/check?week=${week}`).then((r) => r.json()).then((data) => {
+      document.getElementById('status').textContent =
+        `Week of ${week}: ${data.shifts.length} draft shifts, ${data.warnings.length} warnings.`;
+      document.getElementById('warnings').innerHTML = data.warnings
+        .map((w) => `<li><code>${esc(w.code)}</code> ${esc(w.message)}</li>`).join('');
+    }).catch(() => {
+      document.getElementById('status').textContent = 'API not reachable. Run npm run dev.';
+    });
+  </script>
+</body>
+</html>

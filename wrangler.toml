@@ -1,0 +1,16 @@
+name = "moa-scheduler"
+main = "src/worker.js"
+compatibility_date = "2025-10-01"
+
+# Front end (public/) and API (src/worker.js) ship as one Worker.
+[assets]
+directory = "./public"
+not_found_handling = "single-page-application"
+run_worker_first = ["/api/*"]
+
+[[d1_databases]]
+binding = "DB"
+database_name = "moa-scheduler"
+# Replace with the id printed by `npx wrangler d1 create moa-scheduler`.
+database_id = "00000000-0000-0000-0000-000000000000"
+migrations_dir = "migrations"

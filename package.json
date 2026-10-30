@@ -1,0 +1,17 @@
+{
+  "name": "moa-scheduler",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Weekly MOA shift scheduler for a BC clinic: coverage and BC Employment Standards checks.",
+  "scripts": {
+    "test": "node --test",
+    "dev": "wrangler dev",
+    "db:reset:local": "wrangler d1 execute moa-scheduler --local --file=migrations/0001_init.sql && wrangler d1 execute moa-scheduler --local --file=seed.sql",
+    "db:migrate": "wrangler d1 migrations apply moa-scheduler --remote",
+    "deploy": "wrangler deploy"
+  },
+  "devDependencies": {
+    "wrangler": "^4.0.0"
+  }
+}
