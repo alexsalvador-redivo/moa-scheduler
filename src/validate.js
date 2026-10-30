@@ -86,3 +86,54 @@ export function validateClinic(input) {
     week_starts_on: number(input, 'week_starts_on', errors, { min: 0, max: 6, integer: true }),
   }, errors);
 }
+
+const DATE = /^\d{4}-\d{2}-\d{2}$/;
+
+function time(input, field, errors, required = true) {
+  const v = typeof input[field] === 'string' ? input[field].trim() : '';
+  if (!v) {
+    if (required) errors[field] = 'Required.';
+    return null;
+  }
+  if (!TIME.test(v)) errors[field] = 'Use HH:MM.';
+  return v;
+}
+
+export function isDate(v) {
+  return typeof v === 'string' && DATE.test(v) && !Number.isNaN(Date.parse(`${v}T00:00:00Z`))
+    && new Date(`${v}T00:00:00Z`).toISOString().startsWith(v);
+}
+
+// A shift may run past midnight (end at or before start). The break, if any,
+// must sit inside the shift.
+export function validateShift(input) {
+  const errors = {};
+  const v = {
+    staff_id: idOrNull(input, 'staff_id', errors),
+    station_id: idOrNull(input, 'station_id', errors),
+    date: input.date,
+    start_time: time(input, 'start_time', errors),
+    end_time: time(input, 'end_time', errors),
+    break_start: time(input, 'break_start', errors, false),
+    break_end: time(input, 'break_end', errors, false),
+  };
+  if (!v.staff_id) errors.staff_id ??= 'Required.';
+  if (!v.station_id) errors.station_id ??= 'Required.';
+  if (!isDate(v.date)) errors.date = 'Use YYYY-MM-DD.';
+  if (v.start_time && v.start_time === v.end_time) errors.end_time = 'End must differ from start.';
+  if (!!v.break_start !== !!v.break_end) errors.break_end = 'Give both break start and end, or neither.';
+  if (!errors.start_time && !errors.end_time && !errors.break_start && !errors.break_end && v.break_start) {
+    // Minutes after shift start, wrapping past midnight.
+    const after = (t) => (toMin(t) - toMin(v.start_time) + 1440) % 1440;
+    const length = after(v.end_time) || 1440;
+    if (after(v.break_start) >= length || after(v.break_end) > length || after(v.break_end) <= after(v.break_start)) {
+      errors.break_start = 'The break must fall inside the shift.';
+    }
+  }
+  return done(v, errors);
+}
+
+function toMin(t) {
+  const [h, m] = t.split(':').map(Number);
+  return h * 60 + m;
+}

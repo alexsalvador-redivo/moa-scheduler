@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>MOA Shift Scheduler</title>
+  <title>Weekly schedule · MOA Shift Scheduler</title>
   <link rel="stylesheet" href="/style.css">
 </head>
 <body>
@@ -11,24 +11,79 @@
     <h1>MOA Shift Scheduler</h1>
     <nav><a href="/" aria-current="page">Week</a><a href="/admin.html">Clinic setup</a></nav>
   </header>
-  <main>
-  <section>
-  <p>The manager weekly grid comes in milestone 4. For now this page lists the rule warnings for the seeded week.</p>
-  <p id="status">Checking the API…</p>
-  <ul id="warnings"></ul>
-  </section>
+  <main class="wide">
+    <div class="toolbar">
+      <button id="prev" aria-label="Previous week">‹</button>
+      <h2 id="week-label"></h2>
+      <button id="next" aria-label="Next week">›</button>
+      <span class="spacer"></span>
+      <span id="week-status" class="tag"></span>
+      <button id="copy">Copy last week</button>
+    </div>
+
+    <div class="grid-wrap">
+      <table class="grid" id="grid">
+        <thead></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+    <p class="legend">
+      <span><i class="swatch ok"></i>Enough MOAs</span>
+      <span><i class="swatch short"></i>Short</span>
+      <span><i class="swatch idle"></i>No providers booked</span>
+      <span class="muted">Click a day's provider count to change it. Click a cell to add a shift.</span>
+    </p>
+
+    <section id="warnings">
+      <h2>Warnings <span class="count"></span></h2>
+      <p class="muted">Warnings are advice, not blocks. Fix them or knowingly leave them before publishing.</p>
+      <ul></ul>
+    </section>
   </main>
-  <script>
-    const week = '2026-11-01';
-    const esc = (t) => t.replace(/[&<>"]/g, (c) => `&#${c.charCodeAt(0)};`);
-    fetch(`/api/check?week=${week}`).then((r) => r.json()).then((data) => {
-      document.getElementById('status').textContent =
-        `Week of ${week}: ${data.shifts.length} draft shifts, ${data.warnings.length} warnings.`;
-      document.getElementById('warnings').innerHTML = data.warnings
-        .map((w) => `<li><code>${esc(w.code)}</code> ${esc(w.message)}</li>`).join('');
-    }).catch(() => {
-      document.getElementById('status').textContent = 'API not reachable. Run npm run dev.';
-    });
-  </script>
+
+  <dialog id="shift-dialog">
+    <form method="dialog" novalidate>
+      <h2 id="shift-title"></h2>
+      <p class="muted" id="shift-day"></p>
+      <label for="s-staff">Person</label>
+      <select id="s-staff" name="staff_id"></select>
+      <label for="s-station">Station</label>
+      <select id="s-station" name="station_id"></select>
+      <p class="hint" id="s-skill-hint" hidden></p>
+      <label>Quick fill</label>
+      <div class="presets" id="s-presets"></div>
+      <div class="pair">
+        <div><label for="s-start">Start</label><input id="s-start" name="start_time" type="time"></div>
+        <div><label for="s-end">End</label><input id="s-end" name="end_time" type="time"></div>
+      </div>
+      <div class="pair">
+        <div><label for="s-bstart">Meal break from</label><input id="s-bstart" name="break_start" type="time"></div>
+        <div><label for="s-bend">to</label><input id="s-bend" name="break_end" type="time"></div>
+      </div>
+      <p class="form-error" hidden></p>
+      <menu>
+        <button type="button" class="danger" id="s-delete" hidden>Delete</button>
+        <span class="spacer"></span>
+        <button value="cancel" formnovalidate>Cancel</button>
+        <button class="primary" value="save">Save</button>
+      </menu>
+    </form>
+  </dialog>
+
+  <dialog id="blocks-dialog">
+    <form method="dialog" novalidate>
+      <h2 id="blocks-title"></h2>
+      <p class="muted">Providers booked in each block. The app needs <span id="blocks-ratio"></span> MOA per provider, rounded up.</p>
+      <div id="blocks-rows" data-field="blocks"></div>
+      <p><button type="button" id="blocks-add">Add block</button></p>
+      <p class="form-error" hidden></p>
+      <menu>
+        <button value="cancel" formnovalidate>Cancel</button>
+        <button class="primary" value="save">Save</button>
+      </menu>
+    </form>
+  </dialog>
+
+  <script type="module" src="/grid.js"></script>
 </body>
 </html>

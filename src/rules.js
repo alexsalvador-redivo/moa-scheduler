@@ -313,6 +313,37 @@ export function deskEmpty(ctx) {
   return out;
 }
 
+// One day's staffing for the grid's coverage bar, over open hours (or the
+// provider blocks if the clinic is closed that day):
+// [{ from, to, count, required }] with times as 'HH:MM'.
+export function coverageBar(ctx, date) {
+  const ratio = ctx.settings?.coverageRatio ?? 0.5;
+  const blocks = (ctx.providerBlocks ?? []).filter((b) => b.date === date)
+    .map((b) => ({ from: absolute(date, b.start), to: absolute(date, b.end), required: Math.ceil(b.providerCount * ratio) }));
+  const hours = ctx.settings?.openHours?.[weekday(date)];
+  const edges = hours
+    ? [absolute(date, hours[0]), absolute(date, hours[1])]
+    : blocks.flatMap((b) => [b.from, b.to]);
+  if (edges.length === 0) return [];
+  const from = Math.min(...edges), to = Math.max(...edges);
+
+  const cuts = new Set([from, to]);
+  for (const b of blocks) for (const t of [b.from, b.to]) if (t > from && t < to) cuts.add(t);
+  const sorted = [...cuts].sort((x, y) => x - y);
+
+  const bar = [];
+  for (let i = 0; i < sorted.length - 1; i++) {
+    const required = blocks.filter((b) => b.from <= sorted[i] && b.to >= sorted[i + 1])
+      .reduce((max, b) => Math.max(max, b.required), 0);
+    for (const piece of headcount(ctx.shifts, sorted[i], sorted[i + 1])) {
+      const prev = bar.at(-1);
+      if (prev && prev.count === piece.count && prev.required === required && prev.to === piece.from) prev.to = piece.to;
+      else bar.push({ from: piece.from, to: piece.to, count: piece.count, required });
+    }
+  }
+  return bar.map((p) => ({ ...p, from: fmtTime(p.from), to: fmtTime(p.to) }));
+}
+
 export const RULES = {
   REST_8H: rest8h,
   SPLIT_12H: split12h,

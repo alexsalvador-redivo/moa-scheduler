@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { validateSkill, validateStation, validateStaff, validateClinic } from '../src/validate.js';
+import { validateSkill, validateStation, validateStaff, validateClinic, validateShift } from '../src/validate.js';
 
 test('skill needs a name', () => {
   assert.deepEqual(validateSkill({ name: '  Triage ' }), { value: { name: 'Triage' }, errors: null });
@@ -41,4 +41,21 @@ test('clinic checks open hours, ratio and week start', () => {
     name: 'Clinic', open_hours: { 1: ['20:00', '08:00'], 9: ['08:00', '09:00'] }, coverage_ratio: 0, week_starts_on: 7,
   });
   assert.deepEqual(Object.keys(bad.errors).sort(), ['coverage_ratio', 'open_hours', 'week_starts_on']);
+});
+
+test('shift needs staff, station, date and times; break is optional but must fit', () => {
+  const base = { staff_id: 2, station_id: 1, date: '2026-11-02', start_time: '08:00', end_time: '16:30' };
+  assert.equal(validateShift(base).errors, null);
+  assert.equal(validateShift({ ...base, break_start: '12:00', break_end: '12:30' }).errors, null);
+  assert.ok(validateShift({ ...base, break_start: '12:00' }).errors.break_end);
+  assert.ok(validateShift({ ...base, break_start: '17:00', break_end: '17:30' }).errors.break_start);
+  assert.ok(validateShift({ ...base, break_start: '12:30', break_end: '12:00' }).errors.break_start);
+  assert.deepEqual(Object.keys(validateShift({ date: '2026-02-30', start_time: '9:00' }).errors).sort(),
+    ['date', 'end_time', 'staff_id', 'start_time', 'station_id']);
+});
+
+test('overnight shift with a break after midnight is valid', () => {
+  const night = { staff_id: 2, station_id: 1, date: '2026-11-02', start_time: '20:00', end_time: '04:00',
+    break_start: '00:00', break_end: '00:30' };
+  assert.equal(validateShift(night).errors, null);
 });
