@@ -3,6 +3,7 @@
 import { checkSchedule } from './rules.js';
 import { handleAdmin } from './admin.js';
 import { handleSchedule, loadWeek } from './schedule.js';
+import { handleMe } from './me.js';
 
 const json = (data, status = 200) =>
   new Response(JSON.stringify(data), { status, headers: { 'content-type': 'application/json' } });
@@ -24,6 +25,9 @@ export default {
       if (!ctx) return json({ error: 'clinic not found' }, 404);
       return json({ week, shifts: ctx.shifts, warnings: checkSchedule(ctx) });
     }
+
+    const mine = await handleMe(request, env, url.pathname);
+    if (mine) return mine;
 
     const schedule = await handleSchedule(request, env.DB, url);
     if (schedule) return schedule;

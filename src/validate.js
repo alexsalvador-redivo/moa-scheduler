@@ -137,3 +137,35 @@ function toMin(t) {
   const [h, m] = t.split(':').map(Number);
   return h * 60 + m;
 }
+
+// Recurring weekly availability: [{ weekday, start_time, end_time }], replaced as a whole.
+export function validateAvailability(input) {
+  const errors = {};
+  const windows = Array.isArray(input.windows) ? input.windows : [];
+  const value = [];
+  for (const w of windows) {
+    const weekday = Number(w?.weekday);
+    if (!Number.isInteger(weekday) || weekday < 0 || weekday > 6
+      || !TIME.test(w.start_time ?? '') || !TIME.test(w.end_time ?? '') || w.start_time >= w.end_time) {
+      errors.windows = 'Each available day needs a start time before its end time.';
+      continue;
+    }
+    value.push({ weekday, start_time: w.start_time, end_time: w.end_time });
+  }
+  if (windows.length > 21) errors.windows = 'Too many time windows.';
+  return done(value, errors);
+}
+
+export function validateTimeOff(input, today) {
+  const errors = {};
+  const v = {
+    start_date: input.start_date,
+    end_date: input.end_date || input.start_date,
+    reason: text(input, 'reason', errors, { required: false, max: 200 }),
+  };
+  if (!isDate(v.start_date)) errors.start_date = 'Pick a date.';
+  else if (today && v.start_date < today) errors.start_date = 'Pick today or a later date.';
+  if (!isDate(v.end_date)) errors.end_date = 'Pick a date.';
+  else if (!errors.start_date && v.end_date < v.start_date) errors.end_date = 'The last day must be on or after the first.';
+  return done(v, errors);
+}

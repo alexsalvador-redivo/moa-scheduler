@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#1f6feb">
+  <title>My shifts · MOA Shift Scheduler</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body class="staff">
+  <header>
+    <h1>My shifts</h1>
+    <span class="spacer"></span>
+    <span id="who" class="muted"></span>
+  </header>
+  <main>
+    <section id="dev-login" hidden>
+      <h2>Pick who you are</h2>
+      <p class="muted">Local development only. In production, Cloudflare Access signs people in.</p>
+      <select id="dev-user"></select>
+    </section>
+
+    <section id="signed-out" hidden>
+      <h2>You're not signed in</h2>
+      <p>Your email isn't on the clinic's staff list. Ask your manager to add you.</p>
+    </section>
+
+    <div id="app" hidden>
+      <nav class="tabs" role="tablist">
+        <button role="tab" data-tab="shifts" aria-selected="true">Shifts</button>
+        <button role="tab" data-tab="availability">Availability</button>
+        <button role="tab" data-tab="time-off">Time off</button>
+      </nav>
+
+      <section data-panel="shifts">
+        <div id="shift-list"></div>
+      </section>
+
+      <section data-panel="availability" hidden>
+        <h2>When can you work?</h2>
+        <p class="muted">Your usual week. Your manager sees this when building the schedule.
+          If you leave every day off, you're treated as available any time.</p>
+        <form id="avail-form" novalidate>
+          <div id="avail-days" data-field="windows"></div>
+          <p class="form-error" hidden></p>
+          <p><button class="primary">Save availability</button><span class="saved" hidden>Saved</span></p>
+        </form>
+      </section>
+
+      <section data-panel="time-off" hidden>
+        <h2>Request time off</h2>
+        <form id="off-form" novalidate>
+          <div class="pair">
+            <div><label for="off-start">First day</label><input id="off-start" name="start_date" type="date"></div>
+            <div><label for="off-end">Last day</label><input id="off-end" name="end_date" type="date"></div>
+          </div>
+          <label for="off-reason">Note for your manager <span class="muted">(optional)</span></label>
+          <input id="off-reason" name="reason" maxlength="200">
+          <p class="form-error" hidden></p>
+          <p><button class="primary">Send request</button></p>
+        </form>
+        <h2>Your requests</h2>
+        <ul id="off-list" class="plain"></ul>
+      </section>
+    </div>
+  </main>
+  <script type="module" src="/me.js"></script>
+</body>
+</html>

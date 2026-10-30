@@ -1,0 +1,3 @@
+# Copy to .dev.vars for local development.
+# DEV_LOGIN lets the staff page pick who you are without Cloudflare Access. Never set it in production.
+DEV_LOGIN=true

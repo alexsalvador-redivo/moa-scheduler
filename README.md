@@ -11,10 +11,12 @@ See `CLAUDE.md` for scope, rules and milestones.
 - Milestone 2: rules engine (`src/rules.js`) with unit tests for spec test cases 1–12 (`test/`).
 - Milestone 3: clinic setup screen at `/admin.html` (clinic hours and ratio, staff, stations, skills) backed by `src/admin.js`.
 - Milestone 4: manager weekly grid at `/` with live warnings, a coverage bar per day, provider counts, and copy last week (`src/schedule.js`, `public/grid.js`).
+- Milestone 5: staff phone view at `/me.html`: published shifts, weekly availability, time-off requests (`src/me.js`).
 
 ## Run locally
 ```
 npm install
+cp .dev.vars.example .dev.vars   # lets /me.html pick a person locally
 npm test                 # rules engine tests
 npm run db:reset:local   # create local D1 tables and seed data
 npm run dev              # http://localhost:8787
@@ -23,6 +25,8 @@ npm run dev              # http://localhost:8787
 Admin API: `GET/PUT /api/clinic`, and `GET/POST /api/{staff,stations,skills}` plus `PUT/DELETE /api/{...}/:id`.
 Removing a person deactivates them so past shifts keep their owner.
 Schedule API: `GET /api/week?date=`, `POST /api/shifts`, `PUT/DELETE /api/shifts/:id`, `POST /api/week/copy`, `PUT /api/week/blocks`. Each write returns the refreshed week with warnings and coverage.
+Staff API (signed-in person): `GET /api/me`, `PUT /api/me/availability`, `POST /api/me/time-off`, `DELETE /api/me/time-off/:id`.
+Staff only see shifts once they are published (milestone 6).
 
 ## Deploy (first time)
 ```
