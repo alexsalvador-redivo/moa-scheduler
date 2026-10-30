@@ -14,3 +14,12 @@ database_name = "moa-scheduler"
 # Replace with the id printed by `npx wrangler d1 create moa-scheduler`.
 database_id = "00000000-0000-0000-0000-000000000000"
 migrations_dir = "migrations"
+
+# Production settings (see docs/DEPLOY.md). Until ACCESS_TEAM_DOMAIN and
+# ACCESS_AUD are set, every API call is refused: the app fails closed.
+# Never set DEV_LOGIN here; it belongs only in a local .dev.vars file.
+[vars]
+ACCESS_TEAM_DOMAIN = ""   # e.g. "maplegrove.cloudflareaccess.com"
+ACCESS_AUD = ""           # the Access application's Audience (AUD) tag
+MAIL_FROM = ""            # e.g. "Maple Grove Schedule <schedule@maplegrove.ca>"
+APP_URL = ""              # e.g. "https://schedule.maplegrove.ca"

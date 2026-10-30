@@ -1,33 +1,11 @@
 // Clinic setup screen: clinic settings, staff, stations and skills.
+import { $, esc, api, showErrors, blockPage } from '/api.js';
+
 const DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 const state = { clinic: null, skills: [], stations: [], staff: [] };
 
-const $ = (sel, root = document) => root.querySelector(sel);
-const esc = (t) => String(t ?? '').replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
 const skillName = (id) => state.skills.find((s) => s.id === id)?.name ?? '';
 
-async function api(path, options = {}) {
-  const res = await fetch(`/api/${path}`, {
-    ...options,
-    headers: { 'content-type': 'application/json' },
-    body: options.body && JSON.stringify(options.body),
-  });
-  const data = await res.json().catch(() => ({ error: 'Unexpected server response.' }));
-  if (!res.ok) throw Object.assign(new Error(data.error ?? 'Request failed.'), { fields: data.fields });
-  return data;
-}
-
-function showErrors(form, err) {
-  form.querySelectorAll('.field-error').forEach((e) => e.remove());
-  const box = $('.form-error', form);
-  box.hidden = !err;
-  if (!err) return;
-  box.textContent = err.message;
-  for (const [field, message] of Object.entries(err.fields ?? {})) {
-    const input = form.querySelector(`[name="${field}"]`) ?? form.querySelector(`[data-field="${field}"]`);
-    input?.insertAdjacentHTML('afterend', `<p class="field-error">${esc(message)}</p>`);
-  }
-}
 
 // ---------- clinic settings ----------
 
@@ -189,7 +167,11 @@ document.addEventListener('click', async (e) => {
 
 // ---------- load ----------
 
-const [clinic, skills, stations, staff] = await Promise.all(['clinic', 'skills', 'stations', 'staff'].map((p) => api(p)));
-Object.assign(state, { clinic, skills, stations, staff });
-renderClinic();
-renderLists();
+try {
+  const [clinic, skills, stations, staff] = await Promise.all(['clinic', 'skills', 'stations', 'staff'].map((p) => api(p)));
+  Object.assign(state, { clinic, skills, stations, staff });
+  renderClinic();
+  renderLists();
+} catch (err) {
+  if (!blockPage(err)) throw err;
+}
