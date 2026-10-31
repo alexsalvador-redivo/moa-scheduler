@@ -9,6 +9,7 @@ header { background: var(--card); border-bottom: 1px solid var(--line); padding:
 header h1 { font-size: 1.1rem; margin: 0; }
 header nav a { margin-right: .75rem; color: var(--accent); text-decoration: none; }
 header nav a[aria-current] { font-weight: 600; text-decoration: underline; }
+header .sign-out { margin-left: auto; color: var(--accent); text-decoration: none; }
 main { max-width: 60rem; margin: 0 auto; padding: 1rem; }
 section { background: var(--card); border: 1px solid var(--line); border-radius: 8px; padding: 1rem; margin-bottom: 1rem; }
 section h2 { margin: 0 0 .75rem; font-size: 1.05rem; display: flex; justify-content: space-between; align-items: center; }
