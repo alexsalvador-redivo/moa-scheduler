@@ -19,7 +19,7 @@ async function body(request) {
 // Published shifts from the start of this week to five weeks out.
 async function myView(db, me) {
   const today = clinicToday();
-  const [shifts, availability, timeOff] = await Promise.all([
+  const [shifts, availability, timeOff, pending] = await Promise.all([
     db.prepare(`SELECT s.id, s.date, s.start_time, s.end_time, s.break_start, s.break_end, st.name AS station
       FROM shifts s JOIN stations st ON st.id = s.station_id
       WHERE s.staff_id = ? AND s.status = 'published' AND s.date BETWEEN ? AND ?
@@ -28,6 +28,10 @@ async function myView(db, me) {
       .bind(me.id).all(),
     db.prepare(`SELECT id, start_date, end_date, reason, status FROM time_off
       WHERE staff_id = ? AND end_date >= ? ORDER BY start_date`).bind(me.id, addDays(today, -30)).all(),
+    // Shifts the manager has changed but not republished yet.
+    db.prepare(`SELECT COUNT(*) AS n FROM shifts WHERE staff_id = ? AND status = 'draft' AND date BETWEEN ? AND ?
+      AND date >= (SELECT MIN(week_start) FROM schedule_weeks WHERE published_at IS NOT NULL)`)
+      .bind(me.id, addDays(today, -6), addDays(today, 35)).first(),
   ]);
   return {
     today,
@@ -36,6 +40,7 @@ async function myView(db, me) {
       ...s,
       minutes: workedMinutes({ date: s.date, start: s.start_time, end: s.end_time, breakStart: s.break_start, breakEnd: s.break_end }),
     })),
+    beingUpdated: pending.n > 0,
     availability: availability.results,
     timeOff: timeOff.results,
   };

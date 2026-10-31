@@ -80,6 +80,7 @@ export async function weekView(db, anyDate) {
     weekStart: start,
     ...ctx,
     shifts: inWeek,
+    unpublishedChanges: inWeek.some((s) => s.status === 'draft'),
     warnings: checkSchedule(ctx),
     coverage: Object.fromEntries(ctx.dates.map((d) => [d, coverageBar(ctx, d)])),
     hours,
@@ -106,8 +107,9 @@ async function saveShift(db, id, input) {
 
   const fields = [v.staff_id, v.station_id, v.date, v.start_time, v.end_time, v.break_start, v.break_end];
   if (id) {
+    // An edited shift goes back to draft: staff keep seeing nothing new until it is republished.
     const r = await db.prepare(`UPDATE shifts SET staff_id = ?, station_id = ?, date = ?, start_time = ?, end_time = ?,
-      break_start = ?, break_end = ? WHERE id = ? AND clinic_id = ?`).bind(...fields, id, CLINIC).run();
+      break_start = ?, break_end = ?, status = 'draft' WHERE id = ? AND clinic_id = ?`).bind(...fields, id, CLINIC).run();
     if (!r.meta.changes) return json({ error: 'Not found.' }, 404);
   } else {
     await db.prepare(`INSERT INTO shifts (clinic_id, staff_id, station_id, date, start_time, end_time, break_start, break_end)
