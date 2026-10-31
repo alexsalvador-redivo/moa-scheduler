@@ -19,7 +19,7 @@ migrations_dir = "migrations"
 # ACCESS_AUD are set, every API call is refused: the app fails closed.
 # Never set DEV_LOGIN here; it belongs only in a local .dev.vars file.
 [vars]
-ACCESS_TEAM_DOMAIN = ""   # e.g. "maplegrove.cloudflareaccess.com"
-ACCESS_AUD = ""           # the Access application's Audience (AUD) tag
+ACCESS_TEAM_DOMAIN = "flat-wildflower-6001.cloudflareaccess.com"   # e.g. "maplegrove.cloudflareaccess.com"
+ACCESS_AUD = "ae50e460f17cd1ec405bb1282a0f9abf3463e8c1a94c2bf098c9dc88b036c5f6"           # the Access application's Audience (AUD) tag
 MAIL_FROM = ""            # e.g. "Maple Grove Schedule <schedule@maplegrove.ca>"
-APP_URL = ""              # e.g. "https://schedule.maplegrove.ca"
+APP_URL = "https://moa-scheduler.alexsalvador.workers.dev"              # e.g. "https://schedule.maplegrove.ca"
