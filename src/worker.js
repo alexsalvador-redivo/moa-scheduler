@@ -1,6 +1,7 @@
 // API Worker. Static files in public/ are served by Workers Static Assets;
 // anything under /api/ lands here.
 import { checkSchedule } from './rules.js';
+import { handleAdmin } from './admin.js';
 
 const json = (data, status = 200) =>
   new Response(JSON.stringify(data), { status, headers: { 'content-type': 'application/json' } });
@@ -73,6 +74,9 @@ export default {
       if (!ctx) return json({ error: 'clinic not found' }, 404);
       return json({ week, shifts: ctx.shifts, warnings: checkSchedule(ctx) });
     }
+
+    const admin = await handleAdmin(request, env.DB, url.pathname);
+    if (admin) return admin;
 
     return json({ error: 'not found' }, 404);
   },

@@ -9,6 +9,7 @@ See `CLAUDE.md` for scope, rules and milestones.
 ## Status
 - Milestone 1: D1 schema (`migrations/`), seed clinic with 6 MOAs + manager (`seed.sql`), Worker + static front end.
 - Milestone 2: rules engine (`src/rules.js`) with unit tests for spec test cases 1–12 (`test/`).
+- Milestone 3: clinic setup screen at `/admin.html` (clinic hours and ratio, staff, stations, skills) backed by `src/admin.js`.
 
 ## Run locally
 ```
@@ -18,6 +19,8 @@ npm run db:reset:local   # create local D1 tables and seed data
 npm run dev              # http://localhost:8787
 ```
 `GET /api/check?week=2026-11-01` returns the week's shifts and every rule warning.
+Admin API: `GET/PUT /api/clinic`, and `GET/POST /api/{staff,stations,skills}` plus `PUT/DELETE /api/{...}/:id`.
+Removing a person deactivates them so past shifts keep their owner.
 
 ## Deploy (first time)
 ```
