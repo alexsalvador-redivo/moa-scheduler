@@ -178,3 +178,29 @@ test('weekStart and weekday helpers', () => {
   assert.equal(R.weekStart(WED), SUN);
   assert.equal(R.weekStart(SUN, 1), '2026-10-26');
 });
+
+test('coverageBar splits the day by provider blocks and breaks', () => {
+  const ctx = {
+    shifts: [
+      shift(1, MON, '08:00', '16:30', { breakStart: '12:00', breakEnd: '12:30' }),
+      shift(2, MON, '08:00', '16:30', { breakStart: '12:30', breakEnd: '13:00' }),
+      shift(3, MON, '12:00', '20:00', { breakStart: '16:00', breakEnd: '16:30' }),
+    ],
+    providerBlocks: [
+      { date: MON, start: '08:00', end: '16:30', providerCount: 4 },
+      { date: MON, start: '16:30', end: '20:00', providerCount: 2 },
+    ],
+    settings: { coverageRatio: 0.5, openHours: { 1: ['08:00', '20:00'] } },
+  };
+  // Staggered lunches keep 2 on the floor from 08:00 to 13:00.
+  assert.deepEqual(R.coverageBar(ctx, MON), [
+    { from: '08:00', to: '13:00', count: 2, required: 2 },
+    { from: '13:00', to: '16:00', count: 3, required: 2 },
+    { from: '16:00', to: '16:30', count: 2, required: 2 },
+    { from: '16:30', to: '20:00', count: 1, required: 1 },
+  ]);
+});
+
+test('coverageBar is empty on a closed day with no providers', () => {
+  assert.deepEqual(R.coverageBar({ shifts: [], settings: { openHours: {} } }, SUN), []);
+});
