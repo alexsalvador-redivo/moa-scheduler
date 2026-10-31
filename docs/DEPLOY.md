@@ -53,8 +53,9 @@ and set `MAIL_FROM` in `wrangler.toml`. Without this, publishing still works; th
 
 ## 6. Deploy
 Commit the `wrangler.toml` changes, then either run `npx wrangler deploy`, or deploy from GitHub:
-add repository secrets `CLOUDFLARE_API_TOKEN` (a token with the "Edit Cloudflare Workers" template plus D1 edit)
-and `CLOUDFLARE_ACCOUNT_ID`, then run **Actions → Deploy → Run workflow**.
+set `account_id` in `wrangler.toml` (it's in the dashboard's address bar), add the repository secret
+`CLOUDFLARE_API_TOKEN` (a token with the "Edit Cloudflare Workers" template plus D1 edit),
+then run **Actions → Deploy → Run workflow**.
 
 ## Check it
 - Open the app: Access asks for your email and a code, then the weekly grid loads.

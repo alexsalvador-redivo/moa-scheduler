@@ -1,6 +1,7 @@
 name = "moa-scheduler"
 main = "src/worker.js"
 compatibility_date = "2025-10-01"
+account_id = "9c1eb8cceb8f4438b78df1aeaa8561da"
 
 # Front end (public/) and API (src/worker.js) ship as one Worker.
 [assets]
