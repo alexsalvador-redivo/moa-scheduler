@@ -48,7 +48,7 @@ Staff data only. Never store patient information.
 4. Manager weekly grid with live warnings and coverage bar. ✅
 5. Staff view: availability entry, time-off request, "my shifts" on mobile. ✅
 6. Time-off approval, publish with email notice, CSV export of hours. ✅
-7. Cloudflare Access login and role checks; deploy to production.
+7. Cloudflare Access login and role checks; deploy to production. ✅ (code and deploy workflow; first deploy is run by the clinic, see docs/DEPLOY.md)
 
 ## Commands
 - `npm test` — rules engine unit tests (node:test, no dependencies)

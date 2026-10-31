@@ -1,5 +1,5 @@
 // Staff API: the signed-in person's published shifts, availability and time off.
-import { currentUser, clinicToday } from './auth.js';
+import { clinicToday } from './auth.js';
 import { workedMinutes } from './rules.js';
 import { validateAvailability, validateTimeOff } from './validate.js';
 import { addDays } from './schedule.js';
@@ -75,19 +75,9 @@ async function withdrawTimeOff(db, me, id) {
   return json(await myView(db, me));
 }
 
-// Returns a Response for /api/me routes; null otherwise.
-export async function handleMe(request, env, path) {
-  if (path === '/api/dev/users' && env.DEV_LOGIN === 'true') {
-    const people = await env.DB.prepare('SELECT name, email, role FROM staff WHERE active = 1 ORDER BY name').all();
-    return json(people.results);
-  }
-  if (!path.startsWith('/api/me')) return null;
-
-  const me = await currentUser(request, env);
-  if (!me) return json({ error: 'Not signed in as a staff member.', devLogin: env.DEV_LOGIN === 'true' }, 401);
-  const db = env.DB;
+// /api/me routes for the signed-in person (the Worker has already checked sign-in).
+export async function handleMe(request, db, me, path) {
   const method = request.method;
-
   if (path === '/api/me' && method === 'GET') return json(await myView(db, me));
   if (path === '/api/me/availability' && method === 'PUT') return saveAvailability(db, me, await body(request));
   if (path === '/api/me/time-off' && method === 'POST') return requestTimeOff(db, me, await body(request));

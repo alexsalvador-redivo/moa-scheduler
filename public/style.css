@@ -141,3 +141,5 @@ button:disabled { opacity: .5; cursor: default; }
 .notice.warn { background: #fff4d6; }
 .request { display: flex; justify-content: space-between; gap: .75rem; padding: .5rem 0; border-bottom: 1px solid var(--line); flex-wrap: wrap; }
 .request .actions { display: flex; gap: .4rem; align-items: start; }
+.blocked { max-width: 34rem; margin: 2rem auto; }
+.blocked select { margin-top: .25rem; }

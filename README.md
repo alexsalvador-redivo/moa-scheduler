@@ -13,6 +13,7 @@ See `CLAUDE.md` for scope, rules and milestones.
 - Milestone 4: manager weekly grid at `/` with live warnings, a coverage bar per day, provider counts, and copy last week (`src/schedule.js`, `public/grid.js`).
 - Milestone 5: staff phone view at `/me.html`: published shifts, weekly availability, time-off requests (`src/me.js`).
 - Milestone 6: time-off approval, Publish with an email notice, and Export hours (CSV) on the grid (`src/publish.js`, `src/payroll.js`, `src/notify.js`).
+- Milestone 7: Cloudflare Access sign-in verified in the Worker (`src/access.js`), manager-only vs staff routes, tests on every PR, and a manual Deploy workflow.
 
 ## Run locally
 ```
@@ -30,14 +31,14 @@ Staff API (signed-in person): `GET /api/me`, `PUT /api/me/availability`, `POST /
 Staff only see published shifts. Editing a published shift returns it to draft until the week is republished.
 Manager actions: `GET /api/time-off?status=`, `PUT /api/time-off/:id`, `POST /api/week/publish`, `GET /api/week/export.csv?date=`.
 
-## Deploy (first time)
-```
-npx wrangler login
-npx wrangler d1 create moa-scheduler   # paste the database_id into wrangler.toml
-npm run db:migrate
-npx wrangler d1 execute moa-scheduler --remote --file=seed.sql   # optional demo data
-npm run deploy
-```
+## Sign-in and permissions
+In production Cloudflare Access signs people in; the Worker verifies Access's signed token on every request
+and looks the email up in the staff list. Staff can use `/api/me*` (the My shifts page); everything else
+is manager-only. Without Access settings the API refuses every request, unless `DEV_LOGIN=true` is set in a
+local `.dev.vars`, which turns on the "pick who you are" menu for development.
+
+## Deploy
+See [docs/DEPLOY.md](docs/DEPLOY.md): database, Cloudflare Access, email, and the GitHub **Deploy** workflow.
 
 ## Email notices
 Publishing emails each person their week through [Resend](https://resend.com) (free for 3,000 emails a month).

@@ -1,5 +1,7 @@
 // Manager's weekly grid: one row per person, one column per day. Every save
 // returns the refreshed week, with warnings, coverage bars and hours.
+import { $, esc, api, showErrors, blockPage, download } from '/api.js';
+
 const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 const PRESETS = [
   { label: 'Day 8–4:30', start: '08:00', end: '16:30', breakStart: '12:00', breakEnd: '12:30' },
@@ -23,8 +25,6 @@ const RULE_LABELS = {
 let week = null;
 let highlighted = new Set();
 
-const $ = (sel, root = document) => root.querySelector(sel);
-const esc = (t) => String(t ?? '').replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
 const minutes = (t) => { const [h, m] = t.split(':').map(Number); return h * 60 + m; };
 const hours = (min) => `${Math.round((min / 60) * 100) / 100} h`;
 const short = (t) => t.replace(/^0/, '').replace(':00', '');
@@ -32,28 +32,6 @@ const fmtDay = (d, opts) => new Date(`${d}T12:00:00Z`).toLocaleDateString('en-CA
 const weekdayOf = (d) => new Date(`${d}T12:00:00Z`).getUTCDay();
 const addDays = (d, n) => new Date(Date.parse(`${d}T12:00:00Z`) + n * 86400000).toISOString().slice(0, 10);
 
-async function api(path, options = {}) {
-  const res = await fetch(`/api/${path}`, {
-    ...options,
-    headers: { 'content-type': 'application/json' },
-    body: options.body && JSON.stringify(options.body),
-  });
-  const data = await res.json().catch(() => ({ error: 'Unexpected server response.' }));
-  if (!res.ok) throw Object.assign(new Error(data.error ?? 'Request failed.'), { fields: data.fields });
-  return data;
-}
-
-function showErrors(form, err) {
-  form.querySelectorAll('.field-error').forEach((e) => e.remove());
-  const box = $('.form-error', form);
-  box.hidden = !err;
-  if (!err) return;
-  box.textContent = err.message;
-  for (const [field, message] of Object.entries(err.fields ?? {})) {
-    const input = form.querySelector(`[name="${field}"]`) ?? form.querySelector(`[data-field="${field}"]`);
-    input?.insertAdjacentHTML('afterend', `<p class="field-error">${esc(message)}</p>`);
-  }
-}
 
 // ---------- rendering ----------
 
@@ -97,7 +75,6 @@ function render() {
   const publish = $('#publish');
   publish.textContent = changed ? 'Publish changes' : 'Publish';
   publish.disabled = !week.shifts.length || (week.publishedAt && !changed);
-  $('#export').href = `/api/week/export.csv?date=${week.weekStart}`;
   history.replaceState(null, '', `?week=${week.weekStart}`);
 
   const warned = new Map();
@@ -347,6 +324,10 @@ $('#warnings').addEventListener('click', (e) => {
   $('.chip.hl')?.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
 });
 
+$('#export').addEventListener('click', () => {
+  download(`week/export.csv?date=${week.weekStart}`).catch((err) => alert(err.message));
+});
+
 $('#prev').addEventListener('click', () => load(addDays(week.weekStart, -7)));
 $('#next').addEventListener('click', () => load(addDays(week.weekStart, 7)));
 $('#copy').addEventListener('click', async () => {
@@ -359,5 +340,5 @@ $('#copy').addEventListener('click', async () => {
 });
 
 const params = new URLSearchParams(location.search);
-load(params.get('week') ?? new Date().toISOString().slice(0, 10));
-loadRequests();
+Promise.all([load(params.get('week') ?? new Date().toISOString().slice(0, 10)), loadRequests()])
+  .catch((err) => { if (!blockPage(err)) throw err; });

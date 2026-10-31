@@ -1,11 +1,9 @@
 // Staff phone view: published shifts, recurring availability and time-off requests.
-const DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-const DEV_KEY = 'moa-dev-user';
-let me = null;
-let devChoice = null; // used when browser storage is blocked
+import { $, esc, api, showErrors, devUser, devPicker } from '/api.js';
 
-const $ = (sel, root = document) => root.querySelector(sel);
-const esc = (t) => String(t ?? '').replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
+const DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+let me = null;
+
 const addDays = (d, n) => new Date(Date.parse(`${d}T12:00:00Z`) + n * 86400000).toISOString().slice(0, 10);
 const weekdayOf = (d) => new Date(`${d}T12:00:00Z`).getUTCDay();
 const fmtDate = (d, opts) => new Date(`${d}T12:00:00Z`).toLocaleDateString('en-CA', { timeZone: 'UTC', ...opts });
@@ -15,35 +13,6 @@ const hours = (min) => `${Math.round((min / 60) * 100) / 100} h`;
 function clock(t) {
   const [h, m] = t.split(':').map(Number);
   return `${h % 12 || 12}${m ? `:${String(m).padStart(2, '0')}` : ''} ${h < 12 ? 'am' : 'pm'}`;
-}
-
-function devUser() {
-  try {
-    return localStorage.getItem(DEV_KEY) ?? devChoice;
-  } catch {
-    return devChoice;
-  }
-}
-
-async function api(path, options = {}) {
-  const headers = { 'content-type': 'application/json' };
-  if (devUser()) headers['x-dev-user'] = devUser();
-  const res = await fetch(`/api/${path}`, { ...options, headers, body: options.body && JSON.stringify(options.body) });
-  const data = await res.json().catch(() => ({ error: 'Unexpected server response.' }));
-  if (!res.ok) throw Object.assign(new Error(data.error ?? 'Request failed.'), { status: res.status, ...data });
-  return data;
-}
-
-function showErrors(form, err) {
-  form.querySelectorAll('.field-error').forEach((e) => e.remove());
-  const box = $('.form-error', form);
-  box.hidden = !err;
-  if (!err) return;
-  box.textContent = err.message;
-  for (const [field, message] of Object.entries(err.fields ?? {})) {
-    const input = form.querySelector(`[name="${field}"]`) ?? form.querySelector(`[data-field="${field}"]`);
-    input?.insertAdjacentHTML('afterend', `<p class="field-error">${esc(message)}</p>`);
-  }
 }
 
 // ---------- shifts ----------
@@ -178,18 +147,8 @@ $('.tabs').addEventListener('click', (e) => {
 });
 
 async function showDevPicker() {
-  const people = await api('dev/users');
-  const select = $('#dev-user');
-  select.innerHTML = `<option value="">Choose a person…</option>${people.map((p) =>
-    `<option value="${esc(p.email)}" ${p.email === devUser() ? 'selected' : ''}>${esc(p.name)}${p.role === 'manager' ? ' (manager)' : ''}</option>`).join('')}`;
+  await devPicker($('#dev-user'), start);
   $('#dev-login').hidden = false;
-  select.onchange = () => {
-    devChoice = select.value;
-    try {
-      localStorage.setItem(DEV_KEY, select.value);
-    } catch { /* storage blocked: devChoice lasts until reload */ }
-    start();
-  };
 }
 
 async function start() {
