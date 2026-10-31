@@ -99,3 +99,35 @@ dialog menu .spacer { flex: 1; }
   .grid .who { width: 6.5rem; font-size: .85rem; }
   .toolbar h2 { min-width: 0; font-size: 1rem; }
 }
+
+/* ---------- staff phone view ---------- */
+body.staff main { max-width: 34rem; }
+body.staff header { position: sticky; top: 0; z-index: 2; }
+.tabs { display: grid; grid-template-columns: repeat(3, 1fr); gap: .25rem; margin-bottom: .75rem;
+  background: #e9edf2; border-radius: 8px; padding: .25rem; }
+.tabs button { border: 0; background: none; padding: .5rem .25rem; border-radius: 6px; font-size: .95rem; }
+.tabs button[aria-selected="true"] { background: var(--card); font-weight: 600; box-shadow: 0 1px 2px rgb(0 0 0 / .1); }
+ul.plain { list-style: none; padding: 0; margin: 0; }
+.week-head { display: flex; justify-content: space-between; font-size: 1rem; margin: 1rem 0 .5rem; }
+.week-head:first-child { margin-top: 0; }
+.shift-card { display: grid; grid-template-columns: 3.5rem 1fr auto; gap: .75rem; align-items: start;
+  padding: .7rem 0; border-bottom: 1px solid var(--line); }
+.shift-card .when { display: flex; flex-direction: column; text-align: center; background: #eef4ff; border-radius: 6px; padding: .3rem 0; font-size: .85rem; }
+.shift-card .what { display: flex; flex-direction: column; }
+.shift-card .what .muted { font-size: .85rem; }
+.shift-card .hrs { font-size: .85rem; }
+.shift-card.today .when { background: var(--accent); color: #fff; }
+.shift-card.past { opacity: .55; }
+.empty { text-align: center; padding: 1.5rem .5rem; }
+.avail-row { display: grid; grid-template-columns: 1fr 1fr; gap: .3rem .5rem; align-items: center; padding: .4rem 0; border-bottom: 1px solid var(--line); }
+.avail-row .check { grid-column: 1 / -1; font-weight: 500; }
+.avail-row input[type=time] { min-width: 0; }
+.avail-row.off input[type=time] { display: none; }
+.avail-row .check { margin: 0; }
+.off-item { display: flex; justify-content: space-between; gap: .5rem; padding: .6rem 0; border-bottom: 1px solid var(--line); }
+.off-item > div:first-child { display: flex; flex-direction: column; }
+.off-item > div:last-child { text-align: right; }
+.off-item button.link { display: block; margin: .3rem 0 0 auto; }
+.status-pending { background: #fff4d6; }
+.status-approved { background: #dff3e3; }
+.status-declined { background: #fde8e8; }

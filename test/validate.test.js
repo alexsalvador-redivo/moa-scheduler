@@ -1,6 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { validateSkill, validateStation, validateStaff, validateClinic, validateShift } from '../src/validate.js';
+import { validateSkill, validateStation, validateStaff, validateClinic, validateShift,
+  validateAvailability, validateTimeOff } from '../src/validate.js';
 
 test('skill needs a name', () => {
   assert.deepEqual(validateSkill({ name: '  Triage ' }), { value: { name: 'Triage' }, errors: null });
@@ -58,4 +59,21 @@ test('overnight shift with a break after midnight is valid', () => {
   const night = { staff_id: 2, station_id: 1, date: '2026-11-02', start_time: '20:00', end_time: '04:00',
     break_start: '00:00', break_end: '00:30' };
   assert.equal(validateShift(night).errors, null);
+});
+
+test('availability keeps good windows and rejects bad ones', () => {
+  const good = validateAvailability({ windows: [{ weekday: '6', start_time: '09:00', end_time: '15:00' }] });
+  assert.deepEqual(good, { value: [{ weekday: 6, start_time: '09:00', end_time: '15:00' }], errors: null });
+  assert.deepEqual(validateAvailability({ windows: [] }), { value: [], errors: null });
+  assert.ok(validateAvailability({ windows: [{ weekday: 7, start_time: '09:00', end_time: '15:00' }] }).errors);
+  assert.ok(validateAvailability({ windows: [{ weekday: 1, start_time: '15:00', end_time: '09:00' }] }).errors);
+});
+
+test('time off needs a first day not in the past and a last day not before it', () => {
+  const today = '2026-10-30';
+  assert.deepEqual(validateTimeOff({ start_date: '2026-11-06' }, today).value,
+    { start_date: '2026-11-06', end_date: '2026-11-06', reason: '' });
+  assert.ok(validateTimeOff({ start_date: '2026-10-01' }, today).errors.start_date);
+  assert.ok(validateTimeOff({ start_date: '2026-11-06', end_date: '2026-11-05' }, today).errors.end_date);
+  assert.ok(validateTimeOff({}, today).errors.start_date);
 });
