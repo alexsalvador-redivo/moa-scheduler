@@ -11,8 +11,7 @@ run_worker_first = ["/api/*"]
 [[d1_databases]]
 binding = "DB"
 database_name = "moa-scheduler"
-# Replace with the id printed by `npx wrangler d1 create moa-scheduler`.
-database_id = "00000000-0000-0000-0000-000000000000"
+database_id = "346e5a26-4dfc-44d6-bd28-008e603211bc"
 migrations_dir = "migrations"
 
 # Production settings (see docs/DEPLOY.md). Until ACCESS_TEAM_DOMAIN and
