@@ -3,20 +3,22 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Weekly schedule · MOA Shift Scheduler</title>
+  <title>Schedule · MOA Shift Scheduler</title>
   <link rel="stylesheet" href="/style.css">
 </head>
-<body>
+<body class="is-loading">
   <header>
-    <h1>MOA Shift Scheduler</h1>
-    <nav><a href="/" aria-current="page">Week</a><a href="/admin.html">Clinic setup</a><a href="/me.html">My shifts</a></nav>
+    <h1><a class="home" href="/">MOA Shift Scheduler</a></h1>
+    <nav><a href="/" aria-current="page">Schedule</a><a href="/admin.html">Clinic setup</a><a href="/me.html">My shifts</a></nav>
     <a class="sign-out" href="/cdn-cgi/access/logout">Sign out</a>
   </header>
   <main class="wide">
+    <p class="loading">Loading…</p>
     <div class="toolbar">
       <button id="prev" aria-label="Previous week">‹</button>
       <h2 id="week-label"></h2>
       <button id="next" aria-label="Next week">›</button>
+      <button id="today">This week</button>
       <span class="spacer"></span>
       <span id="week-status" class="tag"></span>
       <button id="copy">Copy last week</button>
@@ -24,6 +26,7 @@
       <button id="publish" class="primary">Publish</button>
     </div>
     <p id="publish-result" class="notice" hidden></p>
+    <p id="requests-alert" class="notice warn" hidden><a href="#requests"></a></p>
 
     <div class="grid-wrap">
       <table class="grid" id="grid">

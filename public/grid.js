@@ -1,6 +1,6 @@
 // Manager's weekly grid: one row per person, one column per day. Every save
 // returns the refreshed week, with warnings, coverage bars and hours.
-import { $, esc, api, showErrors, blockPage, download } from '/api.js';
+import { $, esc, api, showErrors, blockPage, download, ask, toast, loaded } from '/api.js';
 
 const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 const PRESETS = [
@@ -24,6 +24,7 @@ const RULE_LABELS = {
 
 let week = null;
 let highlighted = new Set();
+const thisWeekDate = () => new Date().toISOString().slice(0, 10);
 
 const minutes = (t) => { const [h, m] = t.split(':').map(Number); return h * 60 + m; };
 const hours = (min) => `${Math.round((min / 60) * 100) / 100} h`;
@@ -76,6 +77,8 @@ function render() {
   publish.textContent = changed ? 'Publish changes' : 'Publish';
   publish.disabled = !week.shifts.length || (week.publishedAt && !changed);
   history.replaceState(null, '', `?week=${week.weekStart}`);
+  const today = thisWeekDate();
+  $('#today').disabled = week.dates[0] <= today && today <= week.dates[6];
 
   const warned = new Map();
   for (const w of week.warnings) for (const id of w.shiftIds) warned.set(id, [...(warned.get(id) ?? []), w]);
@@ -123,6 +126,8 @@ async function load(date) {
 
 function renderRequests(requests) {
   $('#requests .count').textContent = requests.length ? `(${requests.length})` : '';
+  $('#requests-alert').hidden = !requests.length;
+  $('#requests-alert a').textContent = `${requests.length} time-off request${requests.length === 1 ? '' : 's'} waiting for you. Review below.`;
   $('#requests ul').innerHTML = requests.length ? requests.map((r) => {
     const days = r.start_date === r.end_date
       ? fmtDay(r.start_date, { weekday: 'short', month: 'short', day: 'numeric' })
@@ -147,7 +152,7 @@ $('#requests').addEventListener('click', async (e) => {
     renderRequests(await api(`time-off/${btn.dataset.id}`, { method: 'PUT', body: { status: btn.dataset.decide } }));
     await load(week.weekStart); // approved time off changes the availability warnings
   } catch (err) {
-    alert(err.message);
+    toast(err.message);
     btn.disabled = false;
   }
 });
@@ -159,7 +164,7 @@ $('#publish').addEventListener('click', async () => {
   const question = n
     ? `This week still has ${n} warning${n > 1 ? 's' : ''}. Publish anyway? Staff will see their shifts and get an email.`
     : 'Publish this week? Staff will see their shifts and get an email.';
-  if (!confirm(question)) return;
+  if (!(await ask(question, { yes: 'Publish' }))) return;
   try {
     const result = await api('week/publish', { method: 'POST', body: { week: week.weekStart } });
     week = result.week;
@@ -172,7 +177,7 @@ $('#publish').addEventListener('click', async () => {
     box.className = `notice ${failed || !configured ? 'warn' : 'ok'}`;
     box.hidden = false;
   } catch (err) {
-    alert(err.message);
+    toast(err.message);
   }
 });
 
@@ -247,10 +252,14 @@ shiftForm.addEventListener('submit', async (e) => {
 });
 
 $('#s-delete').addEventListener('click', async () => {
-  if (!confirm('Delete this shift?')) return;
-  week = await api(`shifts/${editingShift.id}`, { method: 'DELETE' });
   shiftDialog.close();
-  render();
+  if (!(await ask('Delete this shift?', { yes: 'Delete', danger: true }))) return shiftDialog.showModal();
+  try {
+    week = await api(`shifts/${editingShift.id}`, { method: 'DELETE' });
+    render();
+  } catch (err) {
+    toast(err.message);
+  }
 });
 
 // ---------- provider blocks dialog ----------
@@ -325,20 +334,22 @@ $('#warnings').addEventListener('click', (e) => {
 });
 
 $('#export').addEventListener('click', () => {
-  download(`week/export.csv?date=${week.weekStart}`).catch((err) => alert(err.message));
+  download(`week/export.csv?date=${week.weekStart}`).catch((err) => toast(err.message));
 });
 
 $('#prev').addEventListener('click', () => load(addDays(week.weekStart, -7)));
 $('#next').addEventListener('click', () => load(addDays(week.weekStart, 7)));
+$('#today').addEventListener('click', () => load(thisWeekDate()));
 $('#copy').addEventListener('click', async () => {
   try {
     week = await api('week/copy', { method: 'POST', body: { week: week.weekStart } });
     render();
   } catch (err) {
-    alert(err.message);
+    toast(err.message);
   }
 });
 
 const params = new URLSearchParams(location.search);
-Promise.all([load(params.get('week') ?? new Date().toISOString().slice(0, 10)), loadRequests()])
+Promise.all([load(params.get('week') ?? thisWeekDate()), loadRequests()])
+  .then(loaded)
   .catch((err) => { if (!blockPage(err)) throw err; });

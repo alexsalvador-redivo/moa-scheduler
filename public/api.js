@@ -71,6 +71,12 @@ export async function devPicker(select, onPick) {
 // Returns true when it handled the error.
 export function blockPage(err) {
   if (err.status !== 401 && err.status !== 403) return false;
+  loaded();
+  // Staff who open a manager page go straight to their own page.
+  if (err.status === 403 && !devUser()) {
+    location.replace('/me.html');
+    return true;
+  }
   const main = $('main');
   const title = err.status === 403 ? 'This page is for managers' : "You're not signed in";
   const body = err.status === 403
@@ -80,4 +86,50 @@ export function blockPage(err) {
     ${err.devLogin || devUser() ? `<label for="dev-user">Local development: pick who you are</label><select id="dev-user"></select>` : ''}</section>`;
   if (err.devLogin || devUser()) devPicker($('#dev-user'), () => location.reload()).catch(() => {});
   return true;
+}
+
+// ---------- in-page messages (instead of the browser's alert/confirm boxes) ----------
+
+let askDialog = null;
+
+// Asks a yes/no question in the app's own style. Resolves true when confirmed.
+export function ask(question, { yes = 'OK', danger = false } = {}) {
+  if (!askDialog) {
+    askDialog = document.createElement('dialog');
+    askDialog.className = 'ask';
+    askDialog.innerHTML = `<form method="dialog"><p class="ask-text"></p>
+      <menu><button value="no">Cancel</button><button value="yes" class="primary"></button></menu></form>`;
+    document.body.append(askDialog);
+  }
+  $('.ask-text', askDialog).textContent = question;
+  const ok = $('button[value=yes]', askDialog);
+  ok.textContent = yes;
+  ok.className = danger ? 'primary danger-fill' : 'primary';
+  askDialog.returnValue = '';
+  askDialog.showModal();
+  ok.focus();
+  return new Promise((resolve) => {
+    askDialog.addEventListener('close', () => resolve(askDialog.returnValue === 'yes'), { once: true });
+  });
+}
+
+// Shows a short message at the bottom of the screen. kind: 'error' or 'ok'.
+export function toast(message, kind = 'error') {
+  let box = $('#toast');
+  if (!box) {
+    box = Object.assign(document.createElement('div'), { id: 'toast', role: 'status' });
+    box.setAttribute('aria-live', 'polite');
+    document.body.append(box);
+    box.addEventListener('click', () => { box.hidden = true; });
+  }
+  box.textContent = message;
+  box.className = kind;
+  box.hidden = false;
+  clearTimeout(box.timer);
+  box.timer = setTimeout(() => { box.hidden = true; }, kind === 'error' ? 8000 : 4000);
+}
+
+// Hides the "Loading…" message once a page has its data.
+export function loaded() {
+  document.body.classList.remove('is-loading');
 }

@@ -144,3 +144,22 @@ button:disabled { opacity: .5; cursor: default; }
 .request .actions { display: flex; gap: .4rem; align-items: start; }
 .blocked { max-width: 34rem; margin: 2rem auto; }
 .blocked select { margin-top: .25rem; }
+
+/* ---------- navigation, loading, in-page messages ---------- */
+header h1 a.home { color: inherit; text-decoration: none; }
+body.staff header nav a { margin-right: .75rem; }
+.loading { display: none; text-align: center; color: var(--muted); padding: 2rem 0; }
+body.is-loading .loading { display: block; }
+body.is-loading main > :not(.loading) { display: none !important; }
+#requests-alert a { color: inherit; font-weight: 500; }
+dialog.ask p { margin: 0 0 .5rem; }
+button.danger-fill { background: var(--danger); border-color: var(--danger); color: #fff; }
+#toast { position: fixed; left: 50%; bottom: 1rem; transform: translateX(-50%); z-index: 10; max-width: calc(100vw - 2rem);
+  padding: .6rem 1rem; border-radius: 8px; box-shadow: 0 2px 8px rgb(0 0 0 / .2); cursor: pointer; }
+#toast.error { background: #8a1c1c; color: #fff; }
+#toast.ok { background: var(--ok); color: #fff; }
+#toast[hidden] { display: none; }
+@media (max-width: 600px) {
+  header { gap: .4rem .75rem; }
+  header h1 { font-size: 1rem; }
+}
