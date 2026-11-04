@@ -6,13 +6,14 @@
   <title>Clinic setup · MOA Shift Scheduler</title>
   <link rel="stylesheet" href="/style.css">
 </head>
-<body>
+<body class="is-loading">
   <header>
-    <h1>MOA Shift Scheduler</h1>
-    <nav><a href="/">Week</a><a href="/admin.html" aria-current="page">Clinic setup</a><a href="/me.html">My shifts</a></nav>
+    <h1><a class="home" href="/">MOA Shift Scheduler</a></h1>
+    <nav><a href="/">Schedule</a><a href="/admin.html" aria-current="page">Clinic setup</a><a href="/me.html">My shifts</a></nav>
     <a class="sign-out" href="/cdn-cgi/access/logout">Sign out</a>
   </header>
   <main>
+    <p class="loading">Loading…</p>
     <section id="clinic">
       <h2>Clinic settings</h2>
       <form id="clinic-form" novalidate>

@@ -1,5 +1,5 @@
 // Clinic setup screen: clinic settings, staff, stations and skills.
-import { $, esc, api, showErrors, blockPage } from '/api.js';
+import { $, esc, api, showErrors, blockPage, ask, toast, loaded } from '/api.js';
 
 const DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 const state = { clinic: null, skills: [], stations: [], staff: [] };
@@ -155,13 +155,13 @@ document.addEventListener('click', async (e) => {
   const question = kind === 'staff'
     ? `Remove ${name}? Their past shifts are kept.`
     : `Delete ${name}?`;
-  if (!confirm(question)) return;
+  if (!(await ask(question, { yes: kind === 'staff' ? 'Remove' : 'Delete', danger: true }))) return;
   try {
     state[kind] = await api(`${kind}/${id}`, { method: 'DELETE' });
     if (kind === 'skills') state.staff = await api('staff'); // their skill lists changed too
     renderLists();
   } catch (err) {
-    alert(err.message);
+    toast(err.message);
   }
 });
 
@@ -172,6 +172,7 @@ try {
   Object.assign(state, { clinic, skills, stations, staff });
   renderClinic();
   renderLists();
+  loaded();
 } catch (err) {
   if (!blockPage(err)) throw err;
 }

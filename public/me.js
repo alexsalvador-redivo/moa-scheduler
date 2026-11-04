@@ -1,5 +1,5 @@
 // Staff phone view: published shifts, recurring availability and time-off requests.
-import { $, esc, api, showErrors, devUser, devPicker } from '/api.js';
+import { $, esc, api, showErrors, devUser, devPicker, ask, toast, loaded } from '/api.js';
 
 const DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 let me = null;
@@ -128,12 +128,12 @@ $('#off-form').addEventListener('submit', async (e) => {
 
 $('#off-list').addEventListener('click', async (e) => {
   const id = e.target.dataset.withdraw;
-  if (!id || !confirm('Withdraw this request?')) return;
+  if (!id || !(await ask('Withdraw this request?', { yes: 'Withdraw', danger: true }))) return;
   try {
     me = await api(`me/time-off/${id}`, { method: 'DELETE' });
     renderTimeOff();
   } catch (err) {
-    alert(err.message);
+    toast(err.message);
   }
 });
 
@@ -155,6 +155,7 @@ async function start() {
   try {
     me = await api('me');
   } catch (err) {
+    loaded();
     $('#app').hidden = true;
     if (err.status === 401 && err.devLogin) return showDevPicker();
     $('#signed-out').hidden = false;
@@ -165,6 +166,11 @@ async function start() {
   renderTimeOff();
   $('#signed-out').hidden = true;
   $('#who').textContent = me.person.name;
+  // Managers get the same menu as their other pages, and the app name goes home.
+  const manager = me.person.role === 'manager';
+  $('#manager-nav').hidden = !manager;
+  $('header .home').href = manager ? '/' : '/me.html';
+  loaded();
   $('#app').hidden = false;
   if (devUser()) await showDevPicker();
 }

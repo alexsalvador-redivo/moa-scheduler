@@ -7,14 +7,15 @@
   <title>My shifts · MOA Shift Scheduler</title>
   <link rel="stylesheet" href="/style.css">
 </head>
-<body class="staff">
+<body class="staff is-loading">
   <header>
-    <h1>My shifts</h1>
-    <span class="spacer"></span>
+    <h1><a class="home" href="/me.html">MOA Shift Scheduler</a></h1>
+    <nav id="manager-nav" hidden><a href="/">Schedule</a><a href="/admin.html">Clinic setup</a><a href="/me.html" aria-current="page">My shifts</a></nav>
     <span id="who" class="muted"></span>
     <a class="sign-out" href="/cdn-cgi/access/logout">Sign out</a>
   </header>
   <main>
+    <p class="loading">Loading…</p>
     <section id="dev-login" hidden>
       <h2>Pick who you are</h2>
       <p class="muted">Local development only. In production, Cloudflare Access signs people in.</p>
