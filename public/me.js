@@ -17,6 +17,23 @@ function clock(t) {
 
 // ---------- shifts ----------
 
+// Current time at the clinic as 'HH:MM'.
+const clinicNow = () => new Date().toLocaleTimeString('en-GB', { timeZone: 'America/Vancouver', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' });
+
+// The first shift that hasn't finished yet, shown big at the top.
+function nextShiftHtml() {
+  const now = clinicNow();
+  const next = me.shifts.find((s) => s.date > me.today || (s.date === me.today && s.end_time > now));
+  if (!next) return '';
+  const day = next.date === me.today ? 'Today'
+    : next.date === addDays(me.today, 1) ? 'Tomorrow'
+      : fmtDate(next.date, { weekday: 'long', month: 'short', day: 'numeric' });
+  const label = next.date === me.today && next.start_time <= now ? 'On shift now' : 'Next shift';
+  return `<div class="next-shift"><span class="label">${label}</span>
+    <b>${day}, ${clock(next.start_time)} – ${clock(next.end_time)}</b>
+    <span>${esc(next.station)}${next.break_start ? ` · Meal break ${clock(next.break_start)}` : ''}</span></div>`;
+}
+
 function renderShifts() {
   const list = $('#shift-list');
   const notice = me.beingUpdated
@@ -33,7 +50,7 @@ function renderShifts() {
     if (!weeks.has(start)) weeks.set(start, []);
     weeks.get(start).push(s);
   }
-  list.innerHTML = notice + [...weeks].map(([start, shifts]) => {
+  list.innerHTML = notice + nextShiftHtml() + [...weeks].map(([start, shifts]) => {
     const total = shifts.reduce((t, s) => t + s.minutes, 0);
     return `<h2 class="week-head">Week of ${fmtDate(start, { month: 'short', day: 'numeric' })}<span class="muted">${hours(total)}</span></h2>
       <ul class="plain shifts">${shifts.map((s) => {
