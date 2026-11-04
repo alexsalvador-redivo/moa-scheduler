@@ -163,3 +163,13 @@ button.danger-fill { background: var(--danger); border-color: var(--danger); col
   header { gap: .4rem .75rem; }
   header h1 { font-size: 1rem; }
 }
+
+/* ---------- next shift card, page shortcuts ---------- */
+.next-shift { display: flex; flex-direction: column; gap: .1rem; background: var(--accent); color: #fff;
+  border-radius: 8px; padding: .75rem 1rem; margin-bottom: 1rem; }
+.next-shift .label { font-size: .8rem; text-transform: uppercase; letter-spacing: .04em; opacity: .85; }
+.next-shift b { font-size: 1.1rem; }
+nav.jump { display: flex; flex-wrap: wrap; gap: .5rem; margin-bottom: 1rem; }
+nav.jump a { border: 1px solid var(--line); background: var(--card); border-radius: 999px; padding: .25rem .8rem;
+  color: var(--accent); text-decoration: none; font-size: .9rem; }
+section[id] { scroll-margin-top: 1rem; }
