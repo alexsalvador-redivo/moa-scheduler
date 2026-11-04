@@ -62,10 +62,11 @@ main.wide { max-width: 90rem; }
 .grid .who { width: 9.5rem; position: sticky; left: 0; background: var(--card); z-index: 1; font-weight: 500; }
 .grid thead .who { background: #fbfcfd; }
 .grid .who .muted { display: block; font-weight: 400; font-size: .8rem; }
-.grid .under { color: var(--danger); }
+.under { color: var(--danger); }
 .grid td { cursor: pointer; min-height: 3rem; height: 3.5rem; }
 .grid td:hover { background: #f4f8ff; }
 .badge { background: var(--danger); color: #fff; border-radius: 9px; padding: 0 .4rem; font-size: .75rem; }
+button.badge { border: 0; padding: 0 .4rem; border-radius: 9px; font-size: .75rem; line-height: 1.5; }
 button.link { border: 0; background: none; padding: 0; color: var(--accent); font-size: .8rem; text-align: left; }
 .cov { display: flex; height: 8px; border-radius: 4px; overflow: hidden; margin-top: .3rem; background: #eef1f4; }
 .cov i, .swatch { display: block; height: 100%; }

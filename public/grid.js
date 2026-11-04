@@ -85,9 +85,10 @@ function render() {
   const stationName = (id) => week.stations.find((s) => s.id === id)?.name ?? '?';
 
   $('#grid thead').innerHTML = `<tr><th class="who">Staff</th>${dates.map((d) => {
-    const dayWarnings = week.warnings.filter((w) => ['COVERAGE', 'DESK_EMPTY'].includes(w.code) && w.message.startsWith(d)).length;
+    const dayWarnings = week.warnings.filter((w) => ['COVERAGE', 'DESK_EMPTY'].includes(w.code) && w.message.startsWith(d));
+    const badgeTip = dayWarnings.map((w) => `${RULE_LABELS[w.code]}: ${w.message.slice(d.length + 1)}`).join('\n');
     return `<th class="${d === new Date().toISOString().slice(0, 10) ? 'today' : ''}">
-      <div class="day">${DAYS[weekdayOf(d)]} ${fmtDay(d, { day: 'numeric' })}${dayWarnings ? ` <span class="badge" title="Coverage warnings">${dayWarnings}</span>` : ''}</div>
+      <div class="day">${DAYS[weekdayOf(d)]} ${fmtDay(d, { day: 'numeric' })}${dayWarnings.length ? ` <button class="badge" data-day-warnings title="${esc(badgeTip)}" aria-label="${dayWarnings.length} staffing warning${dayWarnings.length > 1 ? 's' : ''}, see list below">${dayWarnings.length}</button>` : ''}</div>
       <button class="link" data-blocks="${d}">${providerSummary(d)}</button>
       ${coverageBarHtml(d)}</th>`;
   }).join('')}</tr>`;
@@ -96,7 +97,7 @@ function render() {
     const worked = week.hours[p.id] ?? 0;
     const under = p.minWeeklyHours && worked < p.minWeeklyHours * 60;
     return `<tr><th class="who" scope="row">${esc(p.name)}
-      <span class="muted">${esc(p.staffType)} · <span class="${under ? 'under' : ''}" title="${under ? `Below minimum of ${p.minWeeklyHours} h` : ''}">${hours(worked)}</span></span></th>
+      <span class="muted">${esc(p.staffType)} · <span class="${under ? 'under' : ''}" title="${under ? `Below this person's minimum of ${p.minWeeklyHours} h a week` : ''}">${hours(worked)}${under ? ` of ${p.minWeeklyHours} h min` : ''}</span></span></th>
       ${dates.map((d) => `<td data-add="${p.id}|${d}">${cellNote(p, d)}${week.shifts.filter((s) => s.staffId === p.id && s.date === d).map((s) => {
         const ws = warned.get(s.id) ?? [];
         const cls = ['chip', ws.length ? 'warn' : '', highlighted.has(s.id) ? 'hl' : ''].join(' ');
@@ -313,6 +314,7 @@ blocksForm.addEventListener('submit', async (e) => {
 // ---------- page events ----------
 
 $('#grid').addEventListener('click', (e) => {
+  if (e.target.closest('[data-day-warnings]')) return $('#warnings').scrollIntoView({ behavior: 'smooth' });
   const chip = e.target.closest('[data-shift]');
   if (chip) return openShift({ shift: week.shifts.find((s) => s.id === Number(chip.dataset.shift)) });
   const blocks = e.target.closest('[data-blocks]');
