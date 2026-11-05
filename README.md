@@ -48,3 +48,16 @@ npx wrangler secret put RESEND_API_KEY        # from your Resend account
 # wrangler.toml [vars]: MAIL_FROM = "Clinic Schedule <schedule@your-domain>"  (a domain verified in Resend)
 #                       APP_URL   = "https://your-app-url"                     (optional; defaults to the request's origin)
 ```
+
+## Demo mode
+With `DEMO_MODE = "true"` in `wrangler.toml` (on for now), managers get two extras for showing the app:
+- **Clinic setup → Reset demo data** (`POST /api/demo/reset`) wipes shifts, staff (managers are kept), stations,
+  skills, availability and time off, then loads a fictional 6-MOA clinic around the current week: last week and
+  this week published with no warnings, next week as a draft with six kinds of warnings to fix, the week after
+  empty for **Copy last week**, and two pending time-off requests. All in one D1 batch (`src/demo.js`).
+- **My shifts → "Demo: view this page as"** lets a manager see any staff member's phone view
+  (the `x-view-as` header, honoured only for `/api/me*` routes and only for managers).
+
+To let a prospect sign in themselves: add them as a **Manager** in Clinic setup (managers survive a reset), and
+add their email to the Cloudflare Access policy (Zero Trust → Access → Applications → the app → Policies).
+Set `DEMO_MODE = "false"` before a real clinic uses the deployment.

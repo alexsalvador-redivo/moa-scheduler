@@ -165,9 +165,24 @@ document.addEventListener('click', async (e) => {
   }
 });
 
+// ---------- demo reset ----------
+
+$('#demo-reset').addEventListener('click', async () => {
+  if (!(await ask('Replace everything with the sample clinic? Shifts, staff (except managers), stations and requests are wiped.',
+    { yes: 'Reset demo', danger: true }))) return;
+  try {
+    await api('demo/reset', { method: 'POST' });
+    toast('Sample clinic loaded. Opening the schedule…', 'ok');
+    setTimeout(() => location.assign('/'), 1200);
+  } catch (err) {
+    toast(err.message);
+  }
+});
+
 // ---------- load ----------
 
 try {
+  api('demo').then((d) => { $('#demo').hidden = !d.enabled; }).catch(() => {});
   const [clinic, skills, stations, staff] = await Promise.all(['clinic', 'skills', 'stations', 'staff'].map((p) => api(p)));
   Object.assign(state, { clinic, skills, stations, staff });
   renderClinic();

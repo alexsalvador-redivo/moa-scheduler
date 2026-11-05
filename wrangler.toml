@@ -22,4 +22,7 @@ migrations_dir = "migrations"
 ACCESS_TEAM_DOMAIN = "flat-wildflower-6001.cloudflareaccess.com"   # e.g. "maplegrove.cloudflareaccess.com"
 ACCESS_AUD = "ae50e460f17cd1ec405bb1282a0f9abf3463e8c1a94c2bf098c9dc88b036c5f6"           # the Access application's Audience (AUD) tag
 MAIL_FROM = ""            # e.g. "Maple Grove Schedule <schedule@maplegrove.ca>"
+# DEMO_MODE adds "Reset demo data" to Clinic setup and a "view as" switcher on My shifts
+# for managers. Turn it off ("false") before a real clinic uses this deployment.
+DEMO_MODE = "true"
 APP_URL = "https://moa-scheduler.alexsalvador.workers.dev"              # e.g. "https://schedule.maplegrove.ca"

@@ -21,9 +21,35 @@ function setDevUser(email) {
   } catch { /* storage blocked: devChoice lasts until reload */ }
 }
 
-export async function api(path, options = {}) {
-  const headers = { 'content-type': 'application/json' };
+// Demo mode: which staff member a manager is previewing "My shifts" as (this tab only).
+const VIEW_KEY = 'moa-view-as';
+let viewChoice = null;
+
+export function viewAs() {
+  try {
+    return sessionStorage.getItem(VIEW_KEY) ?? viewChoice;
+  } catch {
+    return viewChoice;
+  }
+}
+
+export function setViewAs(id) {
+  viewChoice = id || null;
+  try {
+    if (id) sessionStorage.setItem(VIEW_KEY, id);
+    else sessionStorage.removeItem(VIEW_KEY);
+  } catch { /* storage blocked: viewChoice lasts until reload */ }
+}
+
+function authHeaders() {
+  const headers = {};
   if (devUser()) headers['x-dev-user'] = devUser();
+  if (viewAs()) headers['x-view-as'] = viewAs();
+  return headers;
+}
+
+export async function api(path, options = {}) {
+  const headers = { 'content-type': 'application/json', ...authHeaders() };
   const res = await fetch(`/api/${path}`, { ...options, headers, body: options.body && JSON.stringify(options.body) });
   const data = await res.json().catch(() => ({ error: 'Unexpected server response.' }));
   if (!res.ok) throw Object.assign(new Error(data.error ?? 'Request failed.'), { status: res.status, ...data });
@@ -32,8 +58,7 @@ export async function api(path, options = {}) {
 
 // Downloads a file from the API (so the dev sign-in header goes with it).
 export async function download(path) {
-  const headers = devUser() ? { 'x-dev-user': devUser() } : {};
-  const res = await fetch(`/api/${path}`, { headers });
+  const res = await fetch(`/api/${path}`, { headers: authHeaders() });
   if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error ?? 'Download failed.');
   const name = /filename="([^"]+)"/.exec(res.headers.get('content-disposition') ?? '')?.[1] ?? 'download';
   const url = URL.createObjectURL(await res.blob());
