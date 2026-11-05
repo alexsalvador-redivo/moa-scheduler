@@ -36,6 +36,8 @@ async function myView(db, me) {
   return {
     today,
     person: { id: me.id, name: me.name, email: me.email, role: me.role, staffType: me.staff_type },
+    // Demo mode only: the manager who is looking, and who they can view as.
+    viewer: me.viewer ?? null,
     shifts: shifts.results.map((s) => ({
       ...s,
       minutes: workedMinutes({ date: s.date, start: s.start_time, end: s.end_time, breakStart: s.break_start, breakEnd: s.break_end }),

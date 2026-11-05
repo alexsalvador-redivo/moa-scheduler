@@ -6,7 +6,8 @@ import { handleAdmin } from './admin.js';
 import { handleSchedule, loadWeek } from './schedule.js';
 import { handleMe } from './me.js';
 import { handlePublish } from './publish.js';
-import { currentUser, accessConfigured } from './auth.js';
+import { currentUser, accessConfigured, clinicToday } from './auth.js';
+import { demoEnabled, resetDemo } from './demo.js';
 
 const json = (data, status = 200) =>
   new Response(JSON.stringify(data), { status, headers: { 'content-type': 'application/json' } });
@@ -19,9 +20,30 @@ export function accessFor(path) {
   return 'manager';
 }
 
+// In demo mode a manager can open "My shifts" as any staff member (x-view-as: staff id)
+// to show the phone view. Only for /api/me routes, so it never grants manager powers.
+async function viewAs(request, env, user) {
+  if (!demoEnabled(env) || user.role !== 'manager') return user;
+  const people = (await env.DB.prepare('SELECT id, name FROM staff WHERE clinic_id = ? AND active = 1 ORDER BY name')
+    .bind(user.clinic_id).all()).results;
+  const id = Number(request.headers.get('x-view-as'));
+  const other = id && id !== user.id
+    ? await env.DB.prepare('SELECT id, clinic_id, name, email, role, staff_type FROM staff WHERE id = ? AND clinic_id = ? AND active = 1')
+      .bind(id, user.clinic_id).first()
+    : null;
+  return { ...(other ?? user), viewer: { id: user.id, name: user.name, people } };
+}
+
 async function route(request, env, url, user) {
   const path = url.pathname;
-  if (accessFor(path) === 'staff') return handleMe(request, env.DB, user, path);
+  if (accessFor(path) === 'staff') return handleMe(request, env.DB, await viewAs(request, env, user), path);
+
+  // Demo mode: is it on, and a one-click reset to the sample clinic.
+  if (path === '/api/demo' && request.method === 'GET') return json({ enabled: demoEnabled(env) });
+  if (path === '/api/demo/reset' && request.method === 'POST') {
+    if (!demoEnabled(env)) return json({ error: 'Demo mode is off.' }, 404);
+    return json(await resetDemo(env.DB, clinicToday()));
+  }
 
   // GET /api/check?week=2026-11-01 → shifts for the week and every rule warning.
   if (path === '/api/check' && request.method === 'GET') {

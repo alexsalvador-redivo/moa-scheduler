@@ -1,5 +1,5 @@
 // Staff phone view: published shifts, recurring availability and time-off requests.
-import { $, esc, api, showErrors, devUser, devPicker, ask, toast, loaded } from '/api.js';
+import { $, esc, api, showErrors, devUser, devPicker, viewAs, setViewAs, ask, toast, loaded } from '/api.js';
 
 const DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 let me = null;
@@ -168,6 +168,20 @@ async function showDevPicker() {
   $('#dev-login').hidden = false;
 }
 
+// Demo mode: a manager can switch to any staff member's phone view.
+function renderViewAs() {
+  const v = me.viewer;
+  $('#view-as').hidden = !v;
+  if (!v) return;
+  const select = $('#view-as-user');
+  select.innerHTML = v.people.map((p) =>
+    `<option value="${p.id === v.id ? '' : p.id}" ${p.id === me.person.id ? 'selected' : ''}>${esc(p.name)}${p.id === v.id ? ' (you)' : ''}</option>`).join('');
+  select.onchange = () => {
+    setViewAs(select.value);
+    start();
+  };
+}
+
 async function start() {
   try {
     me = await api('me');
@@ -182,9 +196,10 @@ async function start() {
   renderAvailability();
   renderTimeOff();
   $('#signed-out').hidden = true;
-  $('#who').textContent = me.person.name;
+  $('#who').textContent = me.viewer && me.viewer.id !== me.person.id ? `Viewing as ${me.person.name}` : me.person.name;
+  renderViewAs();
   // Managers get the same menu as their other pages, and the app name goes home.
-  const manager = me.person.role === 'manager';
+  const manager = me.person.role === 'manager' || Boolean(me.viewer);
   $('#manager-nav').hidden = !manager;
   $('header .home').href = manager ? '/' : '/me.html';
   loaded();
