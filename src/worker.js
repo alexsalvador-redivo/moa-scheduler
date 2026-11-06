@@ -7,14 +7,15 @@ import { handleSchedule, loadWeek } from './schedule.js';
 import { handleMe } from './me.js';
 import { handlePublish } from './publish.js';
 import { currentUser, accessConfigured, clinicToday } from './auth.js';
-import { demoEnabled, resetDemo } from './demo.js';
+import { demoEnabled, resetDemo, ensureDemoClinic } from './demo.js';
+import { passwordMode, passwordMatches, findByUserId, makeSession, sessionCookie, clearCookie } from './password.js';
 
 const json = (data, status = 200) =>
   new Response(JSON.stringify(data), { status, headers: { 'content-type': 'application/json' } });
 
 // What a path needs: 'public', 'dev' (local picker only), 'staff' or 'manager'.
 export function accessFor(path) {
-  if (path === '/api/health') return 'public';
+  if (path === '/api/health' || path === '/api/login' || path === '/api/logout') return 'public';
   if (path === '/api/dev/users') return 'dev';
   if (path === '/api/me' || path.startsWith('/api/me/')) return 'staff';
   return 'manager';
@@ -32,6 +33,28 @@ async function viewAs(request, env, user) {
       .bind(id, user.clinic_id).first()
     : null;
   return { ...(other ?? user), viewer: { id: user.id, name: user.name, people } };
+}
+
+// POST /api/login {userId, password} (password mode only) → sets the session cookie.
+async function login(request, env) {
+  if (!passwordMode(env)) return json({ error: 'not found' }, 404);
+  if (request.method !== 'POST') return json({ error: 'POST only' }, 405);
+  const body = await request.json().catch(() => ({}));
+  if (demoEnabled(env)) await ensureDemoClinic(env.DB, clinicToday());
+  const person = await findByUserId(env.DB, body.userId);
+  const ok = await passwordMatches(body.password, env.DEMO_PASSWORD);
+  if (!person || !ok) return json({ error: 'That user ID and password don\'t match.' }, 401);
+  const token = await makeSession(person.email.toLowerCase(), env.DEMO_PASSWORD);
+  return new Response(JSON.stringify({ ok: true }), {
+    headers: { 'content-type': 'application/json', 'set-cookie': sessionCookie(token) },
+  });
+}
+
+// GET /api/logout: the Sign out link. Password mode clears the cookie; otherwise
+// it hands over to Cloudflare Access's own sign-out.
+function logout(env) {
+  if (!passwordMode(env)) return new Response(null, { status: 302, headers: { location: '/cdn-cgi/access/logout' } });
+  return new Response(null, { status: 302, headers: { location: '/login.html', 'set-cookie': clearCookie() } });
 }
 
 async function route(request, env, url, user) {
@@ -66,6 +89,8 @@ export default {
     const need = accessFor(url.pathname);
     const devLogin = env.DEV_LOGIN === 'true' && !accessConfigured(env);
 
+    if (url.pathname === '/api/login') return login(request, env);
+    if (url.pathname === '/api/logout') return logout(env);
     if (need === 'public') return json({ ok: true });
     if (need === 'dev') {
       if (!devLogin) return json({ error: 'not found' }, 404);
@@ -74,7 +99,9 @@ export default {
     }
 
     const user = await currentUser(request, env);
-    if (!user) return json({ error: 'You are not signed in as a member of this clinic.', devLogin }, 401);
+    if (!user) {
+      return json({ error: 'You are not signed in as a member of this clinic.', devLogin, passwordLogin: passwordMode(env) }, 401);
+    }
     if (need === 'manager' && user.role !== 'manager') {
       return json({ error: 'Only managers can do this. Open My shifts instead.', role: user.role }, 403);
     }

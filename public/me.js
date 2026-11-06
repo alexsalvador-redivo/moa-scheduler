@@ -1,5 +1,5 @@
 // Staff phone view: published shifts, recurring availability and time-off requests.
-import { $, esc, api, showErrors, devUser, devPicker, viewAs, setViewAs, ask, toast, loaded } from '/api.js';
+import { $, esc, api, showErrors, devUser, devPicker, viewAs, setViewAs, ask, toast, loaded, goToLogin } from '/api.js';
 
 const DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 let me = null;
@@ -188,6 +188,7 @@ async function start() {
   } catch (err) {
     loaded();
     $('#app').hidden = true;
+    if (goToLogin(err)) return;
     if (err.status === 401 && err.devLogin) return showDevPicker();
     $('#signed-out').hidden = false;
     return;

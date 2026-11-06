@@ -176,3 +176,4 @@ nav.jump a { border: 1px solid var(--line); background: var(--card); border-radi
 section[id] { scroll-margin-top: 1rem; }
 section.demo { border-style: dashed; background: #fffbea; }
 section.demo select { max-width: 20rem; }
+main.login { max-width: 24rem; }

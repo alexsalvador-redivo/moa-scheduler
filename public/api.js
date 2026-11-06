@@ -92,10 +92,18 @@ export async function devPicker(select, onPick) {
   };
 }
 
+// Demo copy with password sign-in: send a signed-out visitor to the login page.
+export function goToLogin(err) {
+  if (err.status !== 401 || !err.passwordLogin) return false;
+  location.replace(`/login.html?next=${encodeURIComponent(location.pathname)}`);
+  return true;
+}
+
 // For manager pages: replace the page with a sign-in or permission message.
 // Returns true when it handled the error.
 export function blockPage(err) {
   if (err.status !== 401 && err.status !== 403) return false;
+  if (goToLogin(err)) return true;
   loaded();
   // Staff who open a manager page go straight to their own page.
   if (err.status === 403 && !devUser()) {

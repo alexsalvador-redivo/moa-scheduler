@@ -26,3 +26,30 @@ MAIL_FROM = ""            # e.g. "Maple Grove Schedule <schedule@maplegrove.ca>"
 # for managers. Turn it off ("false") before a real clinic uses this deployment.
 DEMO_MODE = "true"
 APP_URL = "https://moa-scheduler.alexsalvador.workers.dev"              # e.g. "https://schedule.maplegrove.ca"
+
+# ---------------------------------------------------------------------------
+# Public demo copy: its own Worker and its own database, no Cloudflare Access.
+# People sign in with a user ID and the shared password in the Worker secret
+# DEMO_PASSWORD (set it with: npx wrangler secret put DEMO_PASSWORD --env demo).
+# Deploy with: npx wrangler deploy --env demo  (or the Deploy workflow, target "demo").
+# Nothing above changes production; settings here apply only with --env demo.
+# See docs/DEMO.md.
+[env.demo]
+name = "moa-scheduler-demo"
+
+[env.demo.assets]
+directory = "./public"
+not_found_handling = "single-page-application"
+run_worker_first = ["/api/*"]
+
+[[env.demo.d1_databases]]
+binding = "DB"
+database_name = "moa-scheduler-demo"
+database_id = "REPLACE_WITH_DEMO_DATABASE_ID"   # from: npx wrangler d1 create moa-scheduler-demo
+migrations_dir = "migrations"
+
+[env.demo.vars]
+AUTH_MODE = "password"
+DEMO_MODE = "true"
+MAIL_FROM = ""            # leave empty: the demo never sends email
+APP_URL = ""

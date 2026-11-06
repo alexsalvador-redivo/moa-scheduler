@@ -2,7 +2,10 @@
 // the app; we verify its signed JWT (src/access.js) rather than trusting a plain
 // header, so a request that bypasses Access gets nothing. For local development,
 // DEV_LOGIN=true in .dev.vars lets the page pick a person with an x-dev-user header.
+// A public demo copy can use AUTH_MODE=password instead (src/password.js), but only
+// when Access isn't configured, so production can't fall back to it.
 import { verifyAccessJwt } from './access.js';
+import { passwordMode, readSession, cookieValue } from './password.js';
 
 export function accessConfigured(env) {
   return Boolean(env.ACCESS_TEAM_DOMAIN && env.ACCESS_AUD);
@@ -18,6 +21,7 @@ export async function requestEmail(request, env, fetchImpl = fetch) {
       return null; // couldn't fetch Access's keys: refuse rather than guess
     }
   }
+  if (passwordMode(env)) return readSession(cookieValue(request), env.DEMO_PASSWORD);
   if (env.DEV_LOGIN === 'true') return request.headers.get('x-dev-user')?.toLowerCase() ?? null;
   return null;
 }

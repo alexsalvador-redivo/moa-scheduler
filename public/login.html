@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#1f6feb">
+  <title>Sign in · MOA Shift Scheduler</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body class="staff">
+  <header>
+    <h1><a class="home" href="/">MOA Shift Scheduler</a></h1>
+  </header>
+  <main class="login">
+    <section>
+      <h2>Sign in to the demo</h2>
+      <form id="login-form">
+        <label for="user-id">User ID</label>
+        <input id="user-id" name="userId" autocomplete="username" autocapitalize="none" spellcheck="false" required>
+        <label for="password">Password</label>
+        <input id="password" name="password" type="password" autocomplete="current-password" required>
+        <p class="form-error" role="alert" hidden></p>
+        <p><button class="primary" type="submit">Sign in</button></p>
+      </form>
+      <p class="muted">Try <strong>manager</strong> to build and publish the schedule, or a staff member
+        such as <strong>priya</strong> to see the phone view. Everyone here is fictional.</p>
+    </section>
+  </main>
+  <script type="module" src="/login.js"></script>
+</body>
+</html>

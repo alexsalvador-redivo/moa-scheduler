@@ -155,3 +155,17 @@ export async function resetDemo(db, today) {
   await db.batch(demoStatements(data).map(([sql, ...args]) => db.prepare(sql).bind(...args)));
   return { ok: true, staff: data.staff.length, shifts: data.shifts.length, thisWeek: data.weeks[1] };
 }
+
+// A brand-new demo database (the password-login demo copy) starts empty: give it a
+// clinic, a manager who signs in as "manager", and the sample data. Does nothing
+// once a clinic exists, so it never overwrites anything.
+export async function ensureDemoClinic(db, today) {
+  if (await db.prepare('SELECT id FROM clinics WHERE id = ?').bind(CLINIC).first()) return false;
+  await db.batch([
+    db.prepare("INSERT INTO clinics (id, name) VALUES (?, 'Maple Grove Clinic (demo)')").bind(CLINIC),
+    db.prepare("INSERT INTO staff (clinic_id, name, email, role, staff_type) VALUES (?, 'Morgan Lee', 'manager@example.test', 'manager', 'FT')")
+      .bind(CLINIC),
+  ]);
+  await resetDemo(db, today);
+  return true;
+}
